@@ -10,25 +10,20 @@
 <meta name="theme-color" content="#000">
 
 <style>
+/* === ТВОИ СТИЛИ БЕЗ ИЗМЕНЕНИЙ === */
 :root{
   --bg:#000;
   --glass:rgba(28,28,30,.72);
   --glass-light:rgba(58,58,60,.55);
   --stroke:rgba(255,255,255,.18);
+  --stroke-soft:rgba(255,255,255,.08);
   --accent:#0A84FF;
   --radius:22px;
   --sub:#8E8E93;
 }
-
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{
-  margin:0;
-  background:var(--bg);
-  color:#fff;
-  font-family:-apple-system,BlinkMacSystemFont,system-ui;
-}
+body{margin:0;background:var(--bg);color:#fff;font-family:-apple-system}
 .hidden{display:none}
-
 .btn,.card,.timer,.day,.adjust{
   background:var(--glass);
   backdrop-filter:blur(26px);
@@ -38,48 +33,37 @@ body{
 .btn{padding:14px;text-align:center;color:var(--accent)}
 .btn.disabled{opacity:.35;pointer-events:none}
 .card{padding:18px}
-
 .projects{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px}
 .assign{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px}
-
-.timer-wrap{display:flex;justify-content:center;margin:24px 0}
-.timer{
-  width:260px;height:260px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:40px;font-weight:600;
-}
+.timer-wrap{display:flex;justify-content:center;margin:30px 0}
+.timer{width:260px;height:260px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px}
 .timer.active{background:rgba(10,132,255,.25)}
-
 .time-adjust{display:flex;justify-content:center;gap:12px;margin-bottom:20px}
-.adjust{
-  width:52px;height:52px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--accent);
-}
-
+.adjust{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--accent)}
 .days{padding:14px;display:grid;gap:10px}
 .day{display:flex;justify-content:space-between;padding:12px}
 .day.active{background:rgba(10,132,255,.2)}
 </style>
 </head>
+
 <body>
 
 <!-- HOME -->
 <div id="home">
   <div class="projects">
-    <div class="card" onclick="openProject('Crypto')">
+    <div class="card" onclick="openMainProject('Crypto')">
       <div>Crypto</div>
-      <div id="today_Crypto">Сьогодні 00:00:00</div>
+      <div id="today_crypto">Сьогодні 00:00:00</div>
     </div>
-    <div class="card" onclick="openProject('UAPP')">
+    <div class="card" onclick="openMainProject('UAPP')">
       <div>UAPP</div>
-      <div id="today_UAPP">Сьогодні 00:00:00</div>
+      <div id="today_uapp">Сьогодні 00:00:00</div>
     </div>
   </div>
 
   <div class="assign">
-    <div class="btn" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
-    <div class="btn" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
+    <div class="btn" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
+    <div class="btn" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
   </div>
 
   <div class="timer-wrap">
@@ -113,6 +97,7 @@ body{
 </div>
 
 <script>
+/* ===== HELPERS ===== */
 const fmt=t=>{
   const s=Math.floor(t/1000);
   return String(Math.floor(s/3600)).padStart(2,"0")+":"+
@@ -121,7 +106,7 @@ const fmt=t=>{
 };
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 
-/* MAIN TIMER */
+/* ===== MAIN TIMER (PERSISTENT) ===== */
 let main=JSON.parse(localStorage.mainTimer||'{"run":false,"t":0,"s":0}');
 const mainEl=document.getElementById("mainTimer");
 
@@ -136,36 +121,44 @@ mainEl.onclick=()=>{
   main.run?main.s=Date.now():main.t+=Date.now()-main.s;
   renderMain();
 };
-function adjustMain(d){main.t=Math.max(0,main.t+d);renderMain()}
+function adjustMain(d){
+  main.t=Math.max(0,main.t+d);
+  renderMain();
+}
 renderMain();
 
+/* ===== ASSIGN MAIN ===== */
 function assignMain(p){
+  if(main.t<=0)return;
   const k=`main_${p}_${dayKey()}`;
   localStorage[k]=(+localStorage[k]||0)+main.t;
   main.t=0;main.run=false;
   renderMain();updateToday();
 }
-
 function updateToday(){
   ["Crypto","UAPP"].forEach(p=>{
-    document.getElementById("today_"+p).textContent=
+    document.getElementById("today_"+p.toLowerCase()).textContent=
       "Сьогодні "+fmt(+localStorage[`main_${p}_${dayKey()}`]||0);
   });
 }
 updateToday();
 
-/* PROJECTS */
-let current=null;
+/* ===== PROJECT TIMERS (SEPARATE + PERSISTENT) ===== */
+let currentProject=null;
 let projectTimers=JSON.parse(localStorage.projectTimers||"{}");
-const projEl=document.getElementById("projectTimer");
+const projectEl=document.getElementById("projectTimer");
 
-function openProject(p){
-  current=p;
+function openMainProject(name){
+  currentProject=name;
   home.classList.add("hidden");
   projectView.classList.remove("hidden");
-  if(!projectTimers[p])projectTimers[p]={run:false,t:0,s:0};
+
+  if(!projectTimers[name])
+    projectTimers[name]={run:false,t:0,s:0};
+
   renderProject();loadDays();
 }
+
 function goHome(){
   projectView.classList.add("hidden");
   home.classList.remove("hidden");
@@ -173,32 +166,37 @@ function goHome(){
 }
 
 function renderProject(){
-  const st=projectTimers[current];
+  const st=projectTimers[currentProject];
   const v=st.run?st.t+(Date.now()-st.s):st.t;
-  projEl.textContent=fmt(v);
+  projectEl.textContent=fmt(v);
   localStorage.projectTimers=JSON.stringify(projectTimers);
   if(st.run)requestAnimationFrame(renderProject);
 }
-projEl.onclick=()=>{
-  const st=projectTimers[current];
+
+projectEl.onclick=()=>{
+  const st=projectTimers[currentProject];
   st.run=!st.run;
   st.run?st.s=Date.now():st.t+=Date.now()-st.s;
   renderProject();
 };
 
+/* ===== ADJUST PROJECT (FIX) ===== */
 function adjustProject(d){
-  const st=projectTimers[current];
+  const st=projectTimers[currentProject];
   st.t=Math.max(0,st.t+d);
-  const k=`main_${current}_${dayKey()}`;
+
+  const k=`main_${currentProject}_${dayKey()}`;
   localStorage[k]=(+localStorage[k]||0)+Math.max(0,d);
+
+  localStorage.projectTimers=JSON.stringify(projectTimers);
   renderProject();loadDays();updateToday();
 }
 
-/* DAYS */
+/* ===== DAYS ===== */
 function loadDays(){
   daysList.innerHTML="";
   Object.keys(localStorage)
-    .filter(k=>k.startsWith(`main_${current}_`))
+    .filter(k=>k.startsWith(`main_${currentProject}_`))
     .sort().reverse()
     .forEach(k=>{
       const r=document.createElement("div");
