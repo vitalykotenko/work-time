@@ -493,10 +493,6 @@ row.addEventListener("touchcancel", () => {
   clearTimeout(pressTimer);
 });
 
-row.addEventListener("touchend", () => {
-  clearTimeout(pressTimer);
-});
-
 row.onclick = (e) => {
   if (longPress) {
     e.preventDefault();
