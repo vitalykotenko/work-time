@@ -7,13 +7,12 @@
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000">
+<meta name="theme-color" content="#000000">
 
 <style>
 :root{
   --bg:#000;
   --glass:rgba(28,28,30,.72);
-  --glass-light:rgba(58,58,60,.55);
   --stroke:rgba(255,255,255,.18);
   --stroke-soft:rgba(255,255,255,.08);
   --accent:#0A84FF;
@@ -22,16 +21,18 @@
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
 body{
   margin:0;
   background:var(--bg);
   color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
 }
+
 .hidden{display:none}
 
 /* COMMON */
-.btn,.card,.timer,.day,.adj{
+.btn,.card,.timer,.adjust,.day{
   background:var(--glass);
   backdrop-filter:blur(26px);
   border-radius:var(--radius);
@@ -48,6 +49,7 @@ body{
 }
 .btn:active{transform:scale(.97)}
 .btn.disabled{opacity:.35;pointer-events:none}
+
 .card{padding:18px}
 
 /* TOP */
@@ -58,7 +60,7 @@ body{
   padding:14px;
 }
 
-/* HOME PROJECTS */
+/* PROJECTS */
 .projects{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -85,8 +87,9 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
-  margin:30px 0 24px;
+  margin:30px 0 110px; /* РЕЗЕРВ ПОД КНОПКУ ПРОЄКТИ */
 }
+
 .timer{
   width:260px;
   height:260px;
@@ -99,26 +102,31 @@ body{
   font-size:40px;
   font-weight:600;
 }
+
 .timer.active{
-  background:rgba(10,132,255,.25);
+  background:rgba(10,132,255,.22);
   border-color:rgba(10,132,255,.55);
-  box-shadow:0 0 40px rgba(10,132,255,.35);
+  box-shadow:
+    inset 0 0 0 1px rgba(10,132,255,.35),
+    0 0 40px rgba(10,132,255,.25);
 }
+
 .timer .time{z-index:2}
 
 /* WAVE */
 .wave{
   position:absolute;
   left:-50%;
-  top:0;
+  bottom:-40%;
   width:200%;
   height:200%;
-  background:linear-gradient(
-    90deg,
-    rgba(10,132,255,.35),
-    rgba(10,132,255,.15),
-    rgba(10,132,255,.35)
-  );
+  background:
+    linear-gradient(
+      90deg,
+      rgba(10,132,255,.35),
+      rgba(10,132,255,.15),
+      rgba(10,132,255,.35)
+    );
   border-radius:45%;
   opacity:0;
 }
@@ -132,27 +140,26 @@ body{
 }
 
 /* ADJUST */
-.adjust{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin-top:14px;
+.adjustments{
+  display:flex;
+  gap:12px;
+  margin-top:16px;
 }
-.adj{
+.adjust{
   width:56px;
   height:56px;
-  border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:15px;
-  color:#fff;
+  font-size:14px;
+  color:var(--accent);
 }
-.adj:active{transform:scale(.94)}
+.adjust:active{transform:scale(.95)}
 
-/* DAYS */
+/* PROJECT VIEW */
+.header{padding:14px}
 .days{
-  padding:14px;
+  padding:0 14px 20px;
   display:grid;
   gap:10px;
 }
@@ -167,27 +174,13 @@ body{
   border-color:rgba(10,132,255,.55);
 }
 
-/* HEADER / BOTTOM */
-.header{padding:14px}
+/* BOTTOM */
 .bottom{
   position:fixed;
   left:0;right:0;bottom:0;
   padding:14px;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom));
   background:linear-gradient(to top,rgba(0,0,0,.9),rgba(0,0,0,.4));
-}
-
-/* SECONDARY */
-.secondary-list{
-  padding:14px;
-  display:grid;
-  gap:14px;
-}
-.plus{
-  background:var(--glass-light);
-  font-size:28px;
-  text-align:center;
-  padding:22px 0;
-  color:#aaa;
 }
 
 input[type=file]{display:none}
@@ -205,19 +198,19 @@ input[type=file]{display:none}
   </div>
 
   <div class="projects">
-    <div class="card project" onclick="openMainProject('Crypto')">
+    <div class="card project">
       <div class="name">Crypto</div>
       <div class="today" id="today_crypto">Сьогодні 00:00</div>
     </div>
-    <div class="card project" onclick="openMainProject('UAPP')">
+    <div class="card project">
       <div class="name">UAPP</div>
       <div class="today" id="today_uapp">Сьогодні 00:00</div>
     </div>
   </div>
 
   <div class="assign">
-    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
-    <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
+    <div class="btn" id="assignCrypto" onclick="assign('Crypto')">Зачислити в Crypto</div>
+    <div class="btn" id="assignUapp" onclick="assign('UAPP')">Зачислити в UAPP</div>
   </div>
 
   <div class="timer-wrap">
@@ -226,11 +219,11 @@ input[type=file]{display:none}
       <span class="time">00:00:00</span>
     </div>
 
-    <div class="adjust">
-      <div class="adj" onclick="adjustMain(-600000)">−10</div>
-      <div class="adj" onclick="adjustMain(-60000)">−1</div>
-      <div class="adj" onclick="adjustMain(60000)">+1</div>
-      <div class="adj" onclick="adjustMain(600000)">+10</div>
+    <div class="adjustments">
+      <div class="adjust" onclick="adjust(-600000)">−10</div>
+      <div class="adjust" onclick="adjust(-60000)">−1</div>
+      <div class="adjust" onclick="adjust(60000)">+1</div>
+      <div class="adjust" onclick="adjust(600000)">+10</div>
     </div>
   </div>
 </div>
@@ -238,7 +231,7 @@ input[type=file]{display:none}
 <!-- PROJECT -->
 <div id="projectView" class="hidden">
   <div class="header">
-    <div class="btn" onclick="backFromProject()">← Назад</div>
+    <div class="btn" onclick="goHome()">← Назад</div>
   </div>
 
   <div class="timer-wrap">
@@ -246,24 +239,16 @@ input[type=file]{display:none}
       <div class="wave"></div>
       <span class="time">00:00:00</span>
     </div>
-
-    <div class="adjust">
-      <div class="adj" onclick="adjustProject(-600000)">−10</div>
-      <div class="adj" onclick="adjustProject(-60000)">−1</div>
-      <div class="adj" onclick="adjustProject(60000)">+1</div>
-      <div class="adj" onclick="adjustProject(600000)">+10</div>
-    </div>
   </div>
 
   <div class="days" id="daysList"></div>
 </div>
 
-<div class="bottom" id="bottomBar">
-  <div class="btn" onclick="openSecondary()">Проєкти</div>
+<div class="bottom">
+  <div class="btn" onclick="openProject('Crypto')">Проєкти</div>
 </div>
 
 <script>
-/* HELPERS */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmtFull=t=>{
   const s=Math.floor(t/1000);
@@ -271,127 +256,70 @@ const fmtFull=t=>{
          String(Math.floor(s%3600/60)).padStart(2,"0")+":"+
          String(s%60).padStart(2,"0");
 };
-function dayKey(){
-  const d=new Date(Date.now()-5*3600000);
-  return d.toISOString().slice(0,10);
-}
 
-/* MAIN TIMER */
 let main={run:false,t:0,s:0};
 const mainTimer=document.getElementById("mainTimer");
-function tickMain(){
+
+function render(){
   const v=main.run?main.t+(Date.now()-main.s):main.t;
   mainTimer.querySelector(".time").textContent=fmtFull(v);
-  updateAssignButtons();
-  if(main.run)requestAnimationFrame(tickMain);
+  if(main.run)requestAnimationFrame(render);
 }
 mainTimer.onclick=()=>{
   main.run=!main.run;
   mainTimer.classList.toggle("active",main.run);
-  if(main.run){main.s=Date.now();tickMain()}
-  else{main.t+=Date.now()-main.s}
+  if(main.run){main.s=Date.now();render()}
+  else main.t+=Date.now()-main.s;
 };
-tickMain();
 
-function adjustMain(delta){
-  main.t=Math.max(0,main.t+delta);
-  tickMain();
+function adjust(ms){
+  main.t=Math.max(0,main.t+ms);
+  render();
 }
 
-/* ASSIGN MAIN */
-function assignMain(p){
-  if(main.t<=0)return;
-  const key=`main_${p}_${dayKey()}`;
-  localStorage[key]=(+localStorage[key]||0)+main.t;
+function assign(p){
+  if(main.t===0)return;
+  const d=new Date();
+  const key=`${p}_${d.toISOString().slice(0,10)}`;
+  localStorage[key]=(Number(localStorage[key])||0)+main.t;
+  document.getElementById("today_"+p.toLowerCase()).textContent=
+    "Сьогодні "+fmtFull(localStorage[key]);
   main.t=0;main.run=false;
   mainTimer.classList.remove("active");
-  tickMain();
-  updateToday();
-}
-function updateAssignButtons(){
-  const a=main.t>0;
-  assignCrypto.classList.toggle("disabled",!a);
-  assignUapp.classList.toggle("disabled",!a);
+  render();
 }
 
-/* TODAY */
-function updateToday(){
-  ["Crypto","UAPP"].forEach(p=>{
-    let sum=0;
-    Object.keys(localStorage)
-      .filter(k=>k===`main_${p}_${dayKey()}`)
-      .forEach(k=>sum+=+localStorage[k]);
-    document.getElementById("today_"+p.toLowerCase()).textContent="Сьогодні "+fmtFull(sum);
-  });
-}
-updateToday();
-
-/* PROJECT */
-let currentProject=null;
-let proj={run:false,t:0,s:0};
-const projectTimer=document.getElementById("projectTimer");
-
-function openMainProject(name){
-  currentProject=name;
+function openProject(p){
   home.classList.add("hidden");
   projectView.classList.remove("hidden");
-  bottomBar.classList.add("hidden");
-  loadMainDays(name);
+  renderDays(p);
 }
-function backFromProject(){
+function goHome(){
   projectView.classList.add("hidden");
   home.classList.remove("hidden");
-  bottomBar.classList.remove("hidden");
 }
 
-projectTimer.onclick=()=>{
-  proj.run=!proj.run;
-  projectTimer.classList.toggle("active",proj.run);
-  if(proj.run){proj.s=Date.now();tickProject()}
-  else{
-    const d=Date.now()-proj.s;
-    proj.t+=d;
-    saveProject(d);
-  }
-};
-function tickProject(){
-  const v=proj.run?proj.t+(Date.now()-proj.s):proj.t;
-  projectTimer.querySelector(".time").textContent=fmtFull(v);
-  if(proj.run)requestAnimationFrame(tickProject);
-}
-function adjustProject(delta){
-  proj.t=Math.max(0,proj.t+delta);
-  tickProject();
-}
-function saveProject(delta){
-  const key=`main_${currentProject}_${dayKey()}`;
-  localStorage[key]=(+localStorage[key]||0)+delta;
-  loadMainDays(currentProject);
-}
-
-/* DAYS */
-function loadMainDays(name){
+function renderDays(p){
   daysList.innerHTML="";
   Object.keys(localStorage)
-    .filter(k=>k.startsWith(`main_${name}_`))
+    .filter(k=>k.startsWith(p+"_"))
     .sort().reverse()
     .forEach(k=>{
-      const date=k.split("_")[2];
-      const d=new Date(date);
+      const d=new Date(k.split("_")[1]);
       const row=document.createElement("div");
       row.className="day";
       row.innerHTML=
-        `<span>${date.slice(8,10)}.${date.slice(5,7)} ${daysUA[d.getDay()]}</span>
+        `<span>${d.getDate().toString().padStart(2,"0")}.${(d.getMonth()+1)
+          .toString().padStart(2,"0")} ${daysUA[d.getDay()]}</span>
          <span>${fmtFull(+localStorage[k])}</span>`;
       row.onclick=()=>{
-        document.querySelectorAll(".day").forEach(x=>x.classList.remove("active"));
+        document.querySelectorAll(".day").forEach(r=>r.classList.remove("active"));
         row.classList.add("active");
       };
       daysList.appendChild(row);
     });
 }
 
-/* CSV */
 function exportCSV(){
   let csv="";
   Object.keys(localStorage).forEach(k=>csv+=k+","+localStorage[k]+"\n");
@@ -412,6 +340,9 @@ fileInput.onchange=e=>{
   };
   r.readAsText(e.target.files[0]);
 };
+
+render();
 </script>
+
 </body>
 </html>
