@@ -213,9 +213,15 @@ input[type=file]{display:none}
   <div class="days" id="daysList"></div>
 </div>
 
+<!-- ===== BOTTOM BUTTON ===== -->
+<div class="bottom" id="bottomBar">
+  <div class="btn" onclick="openProjects()">Проєкти</div>
+</div>
+
 <script>
 /* ===== HELPERS ===== */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
+
 function fmt(ms){
   const s=Math.floor(ms/1000);
   return String(Math.floor(s/3600)).padStart(2,"0")+":"+
@@ -290,15 +296,21 @@ updateToday();
 
 /* ===== NAV ===== */
 let currentProject=null;
+const bottomBar=document.getElementById("bottomBar");
+
+function openProjects(){}
+
 function openProject(name){
   currentProject=name;
   home.classList.add("hidden");
   projectView.classList.remove("hidden");
+  bottomBar.classList.add("hidden");
   loadProjectDays();
 }
 function goHome(){
   projectView.classList.add("hidden");
   home.classList.remove("hidden");
+  bottomBar.classList.remove("hidden");
   updateToday();
 }
 
@@ -345,7 +357,7 @@ function loadProjectDays(){
     row.className="day";
     row.innerHTML=
       `<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[date.getDay()]}</span>
-       <span>${fmt(days[d])}</span>`;
+       <span>${fmtFull(days[d])}</span>`;
     row.onclick=()=>{
       document.querySelectorAll(".day").forEach(x=>x.classList.remove("active"));
       row.classList.add("active");
