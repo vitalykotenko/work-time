@@ -31,13 +31,14 @@ body{
 .hidden{display:none}
 
 /* COMMON */
-.btn,.card,.timer,.day{
+.btn,.card,.timer,.day,.adj{
   background:var(--glass);
   backdrop-filter:blur(26px);
   border-radius:var(--radius);
   border:1px solid var(--stroke);
   box-shadow:inset 0 0 0 1px var(--stroke-soft);
 }
+
 .btn{
   padding:14px;
   text-align:center;
@@ -82,7 +83,8 @@ body{
 /* TIMER */
 .timer-wrap{
   display:flex;
-  justify-content:center;
+  flex-direction:column;
+  align-items:center;
   margin:30px 0 24px;
 }
 .timer{
@@ -128,6 +130,25 @@ body{
   from{transform:translateX(-25%) rotate(0deg)}
   to{transform:translateX(25%) rotate(360deg)}
 }
+
+/* ADJUST */
+.adjust{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+.adj{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:15px;
+  color:#fff;
+}
+.adj:active{transform:scale(.94)}
 
 /* DAYS */
 .days{
@@ -204,16 +225,13 @@ input[type=file]{display:none}
       <div class="wave"></div>
       <span class="time">00:00:00</span>
     </div>
-  </div>
-</div>
 
-<!-- SECONDARY PROJECTS -->
-<div id="projectsView" class="hidden">
-  <div class="header">
-    <div class="btn" onclick="goHome()">← Назад</div>
-  </div>
-  <div class="secondary-list" id="secondaryList">
-    <div class="card plus" onclick="addSecondary()">＋</div>
+    <div class="adjust">
+      <div class="adj" onclick="adjustMain(-600000)">−10</div>
+      <div class="adj" onclick="adjustMain(-60000)">−1</div>
+      <div class="adj" onclick="adjustMain(60000)">+1</div>
+      <div class="adj" onclick="adjustMain(600000)">+10</div>
+    </div>
   </div>
 </div>
 
@@ -222,12 +240,21 @@ input[type=file]{display:none}
   <div class="header">
     <div class="btn" onclick="backFromProject()">← Назад</div>
   </div>
+
   <div class="timer-wrap">
     <div id="projectTimer" class="timer">
       <div class="wave"></div>
       <span class="time">00:00:00</span>
     </div>
+
+    <div class="adjust">
+      <div class="adj" onclick="adjustProject(-600000)">−10</div>
+      <div class="adj" onclick="adjustProject(-60000)">−1</div>
+      <div class="adj" onclick="adjustProject(60000)">+1</div>
+      <div class="adj" onclick="adjustProject(600000)">+10</div>
+    </div>
   </div>
+
   <div class="days" id="daysList"></div>
 </div>
 
@@ -266,6 +293,11 @@ mainTimer.onclick=()=>{
 };
 tickMain();
 
+function adjustMain(delta){
+  main.t=Math.max(0,main.t+delta);
+  tickMain();
+}
+
 /* ASSIGN MAIN */
 function assignMain(p){
   if(main.t<=0)return;
@@ -294,72 +326,24 @@ function updateToday(){
 }
 updateToday();
 
-/* NAV */
-let mode=null,currentProject=null;
-function openSecondary(){
-  home.classList.add("hidden");
-  projectsView.classList.remove("hidden");
-  bottomBar.classList.add("hidden");
-  renderSecondary();
-}
-function goHome(){
-  projectsView.classList.add("hidden");
-  projectView.classList.add("hidden");
-  home.classList.remove("hidden");
-  bottomBar.classList.remove("hidden");
-}
-function backFromProject(){
-  projectView.classList.add("hidden");
-  mode==="secondary"?projectsView.classList.remove("hidden"):goHome();
-}
+/* PROJECT */
+let currentProject=null;
+let proj={run:false,t:0,s:0};
+const projectTimer=document.getElementById("projectTimer");
 
-/* SECONDARY */
-function getSecondary(){
-  return JSON.parse(localStorage.secondaryProjects||"[]");
-}
-function saveSecondary(l){
-  localStorage.secondaryProjects=JSON.stringify(l);
-}
-function renderSecondary(){
-  const l=getSecondary();
-  secondaryList.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
-  l.forEach(n=>{
-    const d=document.createElement("div");
-    d.className="card";
-    d.textContent=n;
-    d.onclick=()=>openSecondaryProject(n);
-    secondaryList.appendChild(d);
-  });
-}
-function addSecondary(){
-  const n=prompt("Назва проєкту");
-  if(!n)return;
-  const l=getSecondary();
-  l.unshift(n);
-  saveSecondary(l);
-  renderSecondary();
-}
-
-/* PROJECT OPEN */
 function openMainProject(name){
-  mode="main";
   currentProject=name;
   home.classList.add("hidden");
   projectView.classList.remove("hidden");
   bottomBar.classList.add("hidden");
   loadMainDays(name);
 }
-function openSecondaryProject(name){
-  mode="secondary";
-  currentProject=name;
-  projectsView.classList.add("hidden");
-  projectView.classList.remove("hidden");
-  loadSecondaryDays(name);
+function backFromProject(){
+  projectView.classList.add("hidden");
+  home.classList.remove("hidden");
+  bottomBar.classList.remove("hidden");
 }
 
-/* PROJECT TIMER */
-let proj={run:false,t:0,s:0};
-const projectTimer=document.getElementById("projectTimer");
 projectTimer.onclick=()=>{
   proj.run=!proj.run;
   projectTimer.classList.toggle("active",proj.run);
@@ -375,10 +359,14 @@ function tickProject(){
   projectTimer.querySelector(".time").textContent=fmtFull(v);
   if(proj.run)requestAnimationFrame(tickProject);
 }
+function adjustProject(delta){
+  proj.t=Math.max(0,proj.t+delta);
+  tickProject();
+}
 function saveProject(delta){
-  const key=(mode==="main"?"main_":"sec_")+currentProject+"_"+dayKey();
+  const key=`main_${currentProject}_${dayKey()}`;
   localStorage[key]=(+localStorage[key]||0)+delta;
-  mode==="main"?loadMainDays(currentProject):loadSecondaryDays(currentProject);
+  loadMainDays(currentProject);
 }
 
 /* DAYS */
@@ -387,28 +375,20 @@ function loadMainDays(name){
   Object.keys(localStorage)
     .filter(k=>k.startsWith(`main_${name}_`))
     .sort().reverse()
-    .forEach(k=>renderDay(k));
-}
-function loadSecondaryDays(name){
-  daysList.innerHTML="";
-  Object.keys(localStorage)
-    .filter(k=>k.startsWith(`sec_${name}_`))
-    .sort().reverse()
-    .forEach(k=>renderDay(k));
-}
-function renderDay(k){
-  const date=k.split("_")[2];
-  const d=new Date(date);
-  const row=document.createElement("div");
-  row.className="day";
-  row.innerHTML=
-    `<span>${date.slice(8,10)}.${date.slice(5,7)} ${daysUA[d.getDay()]}</span>
-     <span>${fmtFull(+localStorage[k])}</span>`;
-  row.onclick=()=>{
-    document.querySelectorAll(".day").forEach(x=>x.classList.remove("active"));
-    row.classList.add("active");
-  };
-  daysList.appendChild(row);
+    .forEach(k=>{
+      const date=k.split("_")[2];
+      const d=new Date(date);
+      const row=document.createElement("div");
+      row.className="day";
+      row.innerHTML=
+        `<span>${date.slice(8,10)}.${date.slice(5,7)} ${daysUA[d.getDay()]}</span>
+         <span>${fmtFull(+localStorage[k])}</span>`;
+      row.onclick=()=>{
+        document.querySelectorAll(".day").forEach(x=>x.classList.remove("active"));
+        row.classList.add("active");
+      };
+      daysList.appendChild(row);
+    });
 }
 
 /* CSV */
