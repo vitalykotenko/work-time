@@ -24,7 +24,7 @@
 
 *{
     box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent; /* Прибирає синій спалах при тапі */
+    -webkit-tap-highlight-color:transparent;
 }
 
 body{
@@ -32,12 +32,9 @@ body{
   background:var(--bg);
   color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
-  
-  /* ЗАХИСТ ВІД ВИДІЛЕННЯ ТА СИСТЕМНИХ МЕНЮ */
   user-select: none;
   -webkit-user-select: none;
-  -webkit-touch-callout: none; /* Вимикає системне меню iOS при затисканні */
-  
+  -webkit-touch-callout: none;
   overflow-x: hidden;
 }
 .hidden{display:none}
@@ -57,7 +54,14 @@ body{
   display: flex;
   align-items: center;
   justify-content: center;
-  white-space: nowrap; /* ФІКС: Текст завжди в один рядок */
+  white-space: nowrap;
+}
+/* Стили для иконки SF Symbol */
+.btn svg {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  fill: currentColor;
 }
 .btn:active,.adjust:active{transform:scale(.95)}
 .btn.disabled{opacity:.35;pointer-events:none}
@@ -91,7 +95,6 @@ body{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    -webkit-user-select: none;
 }
 .menu-item:active { background: rgba(255,255,255,0.1); }
 
@@ -135,8 +138,6 @@ body{
 .day{ 
     display:flex; justify-content:space-between; padding:16px 14px; font-size:15px; 
     transition: transform 0.1s;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
 }
 .day:active { transform: scale(0.98); background: var(--glass-light); }
 
@@ -201,7 +202,10 @@ input[type=file]{display:none}
 <div id="projectView" class="hidden">
   <div class="header">
     <div class="btn" onclick="backFromProject()">← Назад</div>
-    <div class="btn danger" onclick="openTrash()">🗑 Кошик</div>
+    <div class="btn danger" onclick="openTrash()">
+        <svg viewBox="0 0 448 512"><path d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0H284.2c12.1 0 23.2 6.8 28.6 17.7L320 32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 96 0 81.7 0 64S14.3 32 32 32h96l7.2-14.3zM32 128H416V448c0 35.3-28.7 64-64 64H96c-35.3 0-64-28.7-64-64V128zm96 64c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16z"/></svg>
+        Кошик
+    </div>
   </div>
   <div class="timer-wrap">
     <div id="projectTimer" class="timer"><div class="wave"></div><span class="time">00:00:00</span></div>
@@ -238,7 +242,6 @@ input[type=file]{display:none}
 </div>
 
 <script>
-/* JS СТАБІЛЬНА ВЕРСІЯ */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
   const s=Math.floor(Math.abs(t)/1000);
@@ -253,7 +256,6 @@ const parseFmt = s => {
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
-/* ТАЙМЕРИ */
 let main={t:+localStorage.main_total||0, s:+localStorage.main_start||0, run:false};
 const mainTimer=document.getElementById("mainTimer");
 if(main.s){ main.run=true; mainTimer.classList.add("active"); }
@@ -295,7 +297,6 @@ function updateToday(){
 }
 tickMain(); updateToday();
 
-/* НАВІГАЦІЯ */
 let mode=null, cur=null, editingKey=null;
 function showView(id){
     ['home','projectsView','projectView','editView','trashView'].forEach(v=>document.getElementById(v).classList.toggle('hidden',v!==id));
@@ -304,7 +305,6 @@ function goHome(){showView('home')}
 function openSecondary(){renderSecondary(); showView('projectsView')}
 function backFromProject(){mode==="secondary"?openSecondary():goHome()}
 
-/* ПРОЄКТИ */
 const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
 const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
 function renderSecondary(){
@@ -355,27 +355,19 @@ function adjustProject(d){
 function openMainProject(n){mode="main";cur=n;showView('projectView');loadProj()}
 function openSecondaryProject(n){mode="secondary";cur=n;showView('projectView');loadProj()}
 
-/* КОНТЕКСТНЕ МЕНЮ ТА LONG PRESS */
 let pressTimer, lastX, lastY;
 const menu = document.getElementById('contextMenu');
 
 function dayTouchStart(e, key, isTrash=false){
-    // Прибираємо виділення при старті натискання
-    if(e.type === 'touchstart') {
-        // Дозволяємо скролл, але готуємо таймер
-    }
-    
     const touch = e.touches ? e.touches[0] : e;
     lastX = touch.clientX; lastY = touch.clientY;
     
     clearTimeout(pressTimer);
     pressTimer = setTimeout(() => {
-        // Блокуємо системне виділення
         if(e.cancelable) e.preventDefault(); 
         showContextMenu(key, isTrash);
     }, 700);
 }
-
 function dayTouchEnd(){ clearTimeout(pressTimer); }
 
 function showContextMenu(key, isTrash){
@@ -387,7 +379,6 @@ function showContextMenu(key, isTrash){
         hideMenu(); 
     };
     
-    // Позиціонування (враховуємо межі екрану)
     const menuW = 180;
     const menuH = 50;
     let x = lastX;
@@ -403,7 +394,6 @@ function showContextMenu(key, isTrash){
 
 function hideMenu(){ menu.classList.remove('visible'); }
 
-// Блокуємо стандартне контекстне меню браузера повністю
 window.oncontextmenu = function(e) {
     if (e.target.closest('.day')) {
         e.preventDefault();
@@ -425,7 +415,6 @@ function saveEdit(){
     loadDays(); updateToday(); closeEdit();
 }
 
-/* КОШИК */
 function moveToTrash(){
     const trashKey = "trash_" + editingKey;
     localStorage[trashKey] = localStorage[editingKey];
@@ -441,12 +430,10 @@ function renderTrash(){
         const d=key.split("_")[3];
         const row=document.createElement("div"); row.className="day";
         row.innerHTML=`<span>${d}</span><span>${fmt(+localStorage[key])}</span>`;
-        
         row.onmousedown=(e)=>dayTouchStart(e, key, true);
         row.onmouseup=dayTouchEnd;
         row.ontouchstart=(e)=>dayTouchStart(e, key, true);
         row.ontouchend=dayTouchEnd;
-        
         list.appendChild(row);
     });
 }
@@ -458,7 +445,6 @@ function restoreDay(trashKey){
     renderTrash(); loadDays(); updateToday();
 }
 
-/* СПИСОК ДНІВ */
 function loadDays(){
   const list=document.getElementById("daysList"); list.innerHTML="";
   const prefix = (mode==="main"?"main_":"sec_") + cur + "_";
@@ -466,18 +452,14 @@ function loadDays(){
       const d=key.split("_")[2]; const D=new Date(d);
       const row=document.createElement("div"); row.className="day";
       row.innerHTML=`<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span><span>${fmt(+localStorage[key])}</span>`;
-      
-      // Події натискання
       row.onmousedown=(e)=>dayTouchStart(e, key);
       row.onmouseup=dayTouchEnd;
       row.ontouchstart=(e)=>dayTouchStart(e, key);
       row.ontouchend=dayTouchEnd;
-      
       list.appendChild(row);
   });
 }
 
-/* CSV */
 function exportCSV(){
   let c=""; Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c]));
