@@ -13,7 +13,8 @@
 :root{
   --bg:#000;
   --glass:rgba(28,28,30,.72);
-  --stroke:rgba(255,255,255,.28);
+  --stroke:rgba(255,255,255,.18);
+  --stroke-soft:rgba(255,255,255,.08);
   --accent:#0A84FF;
   --radius:22px;
 }
@@ -30,40 +31,17 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
 }
 
-/* ===== COMMON ===== */
 .hidden{display:none}
-.btn, .card, .timer{
-  position:relative;
+
+/* ===== BUTTONS / CARDS ===== */
+.btn,.card,.timer{
   background:var(--glass);
   backdrop-filter:blur(26px);
   border-radius:var(--radius);
-  overflow:hidden;
+  border:1px solid var(--stroke);
+  box-shadow:inset 0 0 0 1px var(--stroke-soft);
 }
 
-/* ===== CORNER STROKES ===== */
-.btn::before,
-.card::before,
-.timer::before{
-  content:"";
-  position:absolute;
-  top:0; right:0;
-  width:40%;
-  height:1px;
-  background:linear-gradient(to left, var(--stroke), transparent);
-}
-
-.btn::after,
-.card::after,
-.timer::after{
-  content:"";
-  position:absolute;
-  bottom:0; left:0;
-  width:40%;
-  height:1px;
-  background:linear-gradient(to right, var(--stroke), transparent);
-}
-
-/* ===== BUTTON ===== */
 .btn{
   padding:14px;
   text-align:center;
@@ -112,14 +90,48 @@ body{
   width:260px;
   height:260px;
   border-radius:50%;
+  position:relative;
+  overflow:hidden;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:40px;
   font-weight:600;
+  transition:background .25s ease, box-shadow .25s ease;
 }
 .timer.active{
-  box-shadow:0 0 0 2px rgba(10,132,255,.25);
+  background:rgba(10,132,255,.22);
+  border-color:rgba(10,132,255,.55);
+  box-shadow:
+    inset 0 0 0 1px rgba(10,132,255,.35),
+    0 0 40px rgba(10,132,255,.25);
+}
+
+/* ===== TIMER CONTENT ===== */
+.timer .time{
+  position:relative;
+  z-index:2;
+}
+
+/* ===== WAVE ===== */
+.timer .wave{
+  position:absolute;
+  left:-50%;
+  bottom:-35%;
+  width:200%;
+  height:200%;
+  background:rgba(255,255,255,.08);
+  border-radius:45%;
+  z-index:1;
+  opacity:0;
+}
+.timer.active .wave{
+  opacity:1;
+  animation:waveMove 6s linear infinite;
+}
+@keyframes waveMove{
+  from{transform:translateX(0) rotate(0deg);}
+  to{transform:translateX(50%) rotate(360deg);}
 }
 
 /* ===== BOTTOM ===== */
@@ -176,35 +188,35 @@ input[type=file]{display:none}
   </div>
 
   <div class="timer-wrap">
-    <div id="mainTimer" class="timer">00:00:00</div>
+    <div id="mainTimer" class="timer">
+      <div class="wave"></div>
+      <span class="time">00:00:00</span>
+    </div>
   </div>
 
 </div>
 
 <!-- ================= PROJECTS ================= -->
 <div id="projectsView" class="hidden">
-
   <div class="header">
     <div class="btn" onclick="goHome()">← Назад</div>
   </div>
-
   <div class="list" id="projectsList">
     <div class="card project plus" onclick="addProject()">＋</div>
   </div>
-
 </div>
 
 <!-- ================= PROJECT ================= -->
 <div id="projectView" class="hidden">
-
   <div class="header">
     <div class="btn" onclick="backToProjects()">← Назад</div>
   </div>
-
   <div class="timer-wrap">
-    <div id="projectTimer" class="timer">00:00:00</div>
+    <div id="projectTimer" class="timer">
+      <div class="wave"></div>
+      <span class="time">00:00:00</span>
+    </div>
   </div>
-
 </div>
 
 <!-- ================= BOTTOM (HOME ONLY) ================= -->
@@ -213,14 +225,7 @@ input[type=file]{display:none}
 </div>
 
 <script>
-/* ===== MAIN TIMER ===== */
-const KEY="main_timer";
-let state=JSON.parse(localStorage.getItem(KEY))||{
-  running:false,elapsed:0,startedAt:0
-};
-let raf;
-const mainTimer=document.getElementById("mainTimer");
-
+/* ===== FORMAT ===== */
 function fmt(ms){
   const s=Math.floor(ms/1000);
   return [
@@ -229,19 +234,28 @@ function fmt(ms){
     String(s%60).padStart(2,"0")
   ].join(":");
 }
+
+/* ===== MAIN TIMER ===== */
+const KEY="main_timer";
+let state=JSON.parse(localStorage.getItem(KEY))||{
+  running:false,elapsed:0,startedAt:0
+};
+let raf;
+const mainTimer=document.getElementById("mainTimer");
+
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
-function render(){
+function renderMain(){
   const now=state.running
     ? state.elapsed+(Date.now()-state.startedAt)
     : state.elapsed;
-  mainTimer.textContent=fmt(now);
-  if(state.running)raf=requestAnimationFrame(render);
+  mainTimer.querySelector(".time").textContent=fmt(now);
+  if(state.running)raf=requestAnimationFrame(renderMain);
 }
 mainTimer.onclick=()=>{
   state.running=!state.running;
   mainTimer.classList.toggle("active",state.running);
   if(state.running){
-    state.startedAt=Date.now(); render();
+    state.startedAt=Date.now(); renderMain();
   }else{
     state.elapsed+=Date.now()-state.startedAt;
     state.startedAt=0; cancelAnimationFrame(raf);
@@ -249,11 +263,10 @@ mainTimer.onclick=()=>{
   save();
 };
 mainTimer.classList.toggle("active",state.running);
-render();
+renderMain();
 
 /* ===== NAV ===== */
 const bottomBar=document.getElementById("bottomBar");
-
 function openProjects(){
   home.classList.add("hidden");
   projectsView.classList.remove("hidden");
@@ -313,7 +326,7 @@ function renderProject(){
   const now=projState.running
     ? projState.elapsed+(Date.now()-projState.startedAt)
     : projState.elapsed;
-  projectTimer.textContent=fmt(now);
+  projectTimer.querySelector(".time").textContent=fmt(now);
   if(projState.running)projRaf=requestAnimationFrame(renderProject);
 }
 projectTimer.onclick=()=>{
