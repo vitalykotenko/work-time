@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Time Tracker</title>
+<title>Work Time</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -12,207 +12,196 @@
 <style>
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
   background: #000;
   color: #fff;
-}
-
-.hidden { display: none; }
-
-.top {
-  display: flex;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #1c1c1e;
-}
-
-.btn {
-  flex: 1;
-  padding: 10px;
-  border-radius: 12px;
-  background: #1c1c1e;
-  color: #0a84ff;
-  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui;
   text-align: center;
 }
 
-.btn.disabled {
-  opacity: 0.4;
+.header {
+  padding: 16px;
+  border-bottom: 1px solid #1c1c1e;
 }
 
-.actions {
+.buttons {
   display: flex;
   gap: 12px;
-  padding: 12px 16px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
-.circle-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: 40px;
+.btn {
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: #1c1c1e;
+  color: #0a84ff;
+  font-size: 15px;
 }
+
+.btn:active { background: #2c2c2e; }
 
 .circle {
   width: 240px;
   height: 240px;
   border-radius: 50%;
+  margin: 60px auto;
   background: #1c1c1e;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 36px;
 }
 
-.circle.running {
-  background: #0a84ff;
-}
+.circle.active { background: #1c2a3a; }
 
 input[type="file"] { display: none; }
 </style>
 </head>
 <body>
 
-<!-- PROJECT BUTTONS -->
-<div class="top">
-  <div class="btn disabled" id="toCrypto">Зачислити в Crypto</div>
-  <div class="btn disabled" id="toUapp">Зачислити в UAPP</div>
-</div>
-
-<!-- CSV -->
-<div class="actions">
-  <div class="btn" id="exportBtn">Експорт CSV</div>
-  <div class="btn" id="importBtn">Імпорт CSV</div>
-  <input type="file" id="fileInput" accept=".csv">
-</div>
-
-<!-- TIMER -->
-<div class="circle-wrap">
-  <div class="circle" id="circle">
-    <div id="time">00:00:00</div>
+<div class="header">
+  <div class="buttons">
+    <div class="btn" id="toCrypto">Зачислити в Crypto</div>
+    <div class="btn" id="toUapp">Зачислити в UAPP</div>
+  </div>
+  <br>
+  <div class="buttons">
+    <div class="btn" id="exportCsv">Експорт CSV</div>
+    <div class="btn" id="importCsv">Імпорт CSV</div>
+    <input type="file" id="fileInput" accept=".csv">
   </div>
 </div>
 
+<div id="circle" class="circle">
+  <span id="time">00:00:00</span>
+</div>
+
 <script>
-/* ===== CONFIG ===== */
-const PROJECTS = ["Crypto", "UAPP"];
-const DAY_START_HOUR = 5;
-
 /* ===== STATE ===== */
-let state = JSON.parse(localStorage.getItem("timerState")) || {
-  isRunning: false,
-  startedAt: null,
-  elapsedMs: 0
-};
+let running = false;
+let startTs = null;
+let accumulated = 0;
 
-let data = JSON.parse(localStorage.getItem("projectsData")) || {
-  Crypto: {},
-  UAPP: {}
-};
+/* ===== STORAGE KEYS ===== */
+const KEY_STATE = "timer_state";
+const KEY_PROJECTS = "projects";
 
 /* ===== ELEMENTS ===== */
 const circle = document.getElementById("circle");
 const timeEl = document.getElementById("time");
-const toCrypto = document.getElementById("toCrypto");
-const toUapp = document.getElementById("toUapp");
-const exportBtn = document.getElementById("exportBtn");
-const importBtn = document.getElementById("importBtn");
-const fileInput = document.getElementById("fileInput");
 
-/* ===== TIME HELPERS ===== */
+/* ===== TIME UTILS ===== */
 function format(ms) {
-  const total = Math.floor(ms / 1000);
-  const h = String(Math.floor(total / 3600)).padStart(2,"0");
-  const m = String(Math.floor((total % 3600) / 60)).padStart(2,"0");
-  const s = String(total % 60).padStart(2,"0");
-  return `${h}:${m}:${s}`;
+  const s = Math.floor(ms / 1000);
+  const h = String(Math.floor(s / 3600)).padStart(2,"0");
+  const m = String(Math.floor((s % 3600) / 60)).padStart(2,"0");
+  const sec = String(s % 60).padStart(2,"0");
+  return `${h}:${m}:${sec}`;
 }
 
-function getWorkDate() {
-  const d = new Date();
-  if (d.getHours() < DAY_START_HOUR) d.setDate(d.getDate() - 1);
+/* ===== DAY KEY (05:00) ===== */
+function dayKey(ts = Date.now()) {
+  const d = new Date(ts - 5 * 3600 * 1000);
   return d.toISOString().slice(0,10);
 }
 
-function currentElapsed() {
-  if (!state.isRunning) return state.elapsedMs;
-  return state.elapsedMs + (Date.now() - state.startedAt);
-}
+/* ===== LOAD ===== */
+(function load() {
+  const s = JSON.parse(localStorage.getItem(KEY_STATE));
+  if (!s) return;
 
-/* ===== UI UPDATE ===== */
-function render() {
-  const ms = currentElapsed();
-  timeEl.textContent = format(ms);
+  accumulated = s.accumulated || 0;
+  running = s.running;
+  startTs = s.startTs;
 
-  circle.classList.toggle("running", state.isRunning);
-
-  const canAssign = !state.isRunning && ms > 0;
-  toCrypto.classList.toggle("disabled", !canAssign);
-  toUapp.classList.toggle("disabled", !canAssign);
-}
-
-/* ===== TIMER TOGGLE ===== */
-circle.onclick = () => {
-  if (!state.isRunning) {
-    state.isRunning = true;
-    state.startedAt = Date.now();
-  } else {
-    state.elapsedMs += Date.now() - state.startedAt;
-    state.startedAt = null;
-    state.isRunning = false;
+  if (running && startTs) {
+    accumulated += Date.now() - startTs;
+    startTs = Date.now();
   }
-  localStorage.setItem("timerState", JSON.stringify(state));
+})();
+
+/* ===== SAVE ===== */
+function save() {
+  localStorage.setItem(KEY_STATE, JSON.stringify({
+    accumulated,
+    running,
+    startTs
+  }));
+}
+
+/* ===== RENDER ===== */
+function render() {
+  timeEl.textContent = format(accumulated + (running ? Date.now() - startTs : 0));
+  circle.classList.toggle("active", running);
+}
+
+/* ===== TOGGLE ===== */
+circle.onclick = () => {
+  if (running) {
+    accumulated += Date.now() - startTs;
+    running = false;
+    startTs = null;
+  } else {
+    running = true;
+    startTs = Date.now();
+  }
+  save();
   render();
 };
 
-/* ===== ASSIGN TIME ===== */
-function assign(project) {
-  if (state.isRunning || state.elapsedMs === 0) return;
+/* ===== LOOP ===== */
+setInterval(render, 500);
 
-  const day = getWorkDate();
-  data[project][day] = (data[project][day] || 0) + state.elapsedMs;
+/* ===== PROJECTS ===== */
+function addToProject(name) {
+  if (running) {
+    accumulated += Date.now() - startTs;
+    running = false;
+    startTs = null;
+  }
 
-  state.elapsedMs = 0;
-  localStorage.setItem("projectsData", JSON.stringify(data));
-  localStorage.setItem("timerState", JSON.stringify(state));
+  const key = `${name}_${dayKey()}`;
+  const prev = Number(localStorage.getItem(key) || 0);
+  localStorage.setItem(key, prev + accumulated);
+
+  accumulated = 0;
+  save();
   render();
 }
 
-toCrypto.onclick = () => assign("Crypto");
-toUapp.onclick = () => assign("UAPP");
+document.getElementById("toCrypto").onclick = () => addToProject("crypto");
+document.getElementById("toUapp").onclick = () => addToProject("uapp");
 
 /* ===== CSV ===== */
-exportBtn.onclick = () => {
-  let csv = "project,date,ms\n";
-  PROJECTS.forEach(p => {
-    Object.entries(data[p]).forEach(([d,v]) => {
-      csv += `${p},${d},${v}\n`;
-    });
+document.getElementById("exportCsv").onclick = () => {
+  let csv = "key,ms\n";
+  Object.keys(localStorage).forEach(k => {
+    if (k.includes("_")) csv += `${k},${localStorage.getItem(k)}\n`;
   });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
-  a.download = "time-tracker.csv";
+  a.download = "work-time.csv";
   a.click();
 };
 
-importBtn.onclick = () => fileInput.click();
-fileInput.onchange = e => {
+document.getElementById("importCsv").onclick = () =>
+  document.getElementById("fileInput").click();
+
+document.getElementById("fileInput").onchange = e => {
   const r = new FileReader();
   r.onload = () => {
     r.result.split("\n").slice(1).forEach(l => {
       if (!l.trim()) return;
-      const [p,d,v] = l.split(",");
-      if (!data[p]) data[p] = {};
-      data[p][d] = (data[p][d] || 0) + Number(v);
+      const [k,v] = l.split(",");
+      localStorage.setItem(k, v);
     });
-    localStorage.setItem("projectsData", JSON.stringify(data));
     alert("Імпорт завершено");
   };
   r.readAsText(e.target.files[0]);
 };
 
-/* ===== START ===== */
+/* ===== INIT ===== */
 render();
-setInterval(render, 1000);
 </script>
 </body>
 </html>
