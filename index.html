@@ -345,21 +345,45 @@ let proj={run:false,t:0,s:0};
 const projectTimer=document.getElementById("projectTimer");
 
 function loadProj(){
-  proj.t=+localStorage[k(mode==="main"?"main":"sec",cur)]||0;
-  proj.run=false;
-  projectTimer.classList.remove("active");
-  tickProj();loadDays();
+  const base = `proj_${mode}_${cur}`;
+
+  proj.t = +localStorage[base+"_total"] || 0;
+  proj.s = +localStorage[base+"_start"] || 0;
+  proj.run = !!proj.s;
+
+  projectTimer.classList.toggle("active", proj.run);
+  tickProj();
+  loadDays();
 }
 function tickProj(){
-  const v=proj.run?proj.t+(Date.now()-proj.s):proj.t;
-  projectTimer.querySelector(".time").textContent=fmt(v);
-  if(proj.run)requestAnimationFrame(tickProj);
+  const v = proj.run
+    ? proj.t + (Date.now() - proj.s)
+    : proj.t;
+
+  projectTimer.querySelector(".time").textContent = fmt(v);
+  requestAnimationFrame(tickProj);
 }
-projectTimer.onclick=()=>{
-  proj.run=!proj.run;
-  projectTimer.classList.toggle("active",proj.run);
-  if(proj.run){proj.s=Date.now();tickProj()}
-  else saveProj(Date.now()-proj.s);
+projectTimer.onclick = () => {
+  const base = `proj_${mode}_${cur}`;
+
+  if(proj.run){
+    // STOP
+    proj.t += Date.now() - proj.s;
+    proj.s = 0;
+    proj.run = false;
+
+    localStorage[base+"_start"] = 0;
+    localStorage[base+"_total"] = proj.t;
+  } else {
+    // START
+    proj.s = Date.now();
+    proj.run = true;
+
+    localStorage[base+"_start"] = proj.s;
+    localStorage[base+"_total"] = proj.t;
+  }
+
+  projectTimer.classList.toggle("active", proj.run);
 };
 function adjustProject(d){saveProj(d)}
 function saveProj(d){
