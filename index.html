@@ -9,6 +9,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000">
 
+<link rel="apple-touch-icon" href="Icon time-work.png">
+<link rel="icon" type="image/png" href="Icon time-work.png">
+
 <style>
 :root{
   --bg:#000;
@@ -242,6 +245,7 @@ input[type=file]{display:none}
 </div>
 
 <script>
+/* JS СТАБІЛЬНА ВЕРСІЯ */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
   const s=Math.floor(Math.abs(t)/1000);
@@ -256,6 +260,7 @@ const parseFmt = s => {
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
+/* ТАЙМЕРИ */
 let main={t:+localStorage.main_total||0, s:+localStorage.main_start||0, run:false};
 const mainTimer=document.getElementById("mainTimer");
 if(main.s){ main.run=true; mainTimer.classList.add("active"); }
@@ -297,6 +302,7 @@ function updateToday(){
 }
 tickMain(); updateToday();
 
+/* НАВІГАЦІЯ */
 let mode=null, cur=null, editingKey=null;
 function showView(id){
     ['home','projectsView','projectView','editView','trashView'].forEach(v=>document.getElementById(v).classList.toggle('hidden',v!==id));
@@ -305,6 +311,7 @@ function goHome(){showView('home')}
 function openSecondary(){renderSecondary(); showView('projectsView')}
 function backFromProject(){mode==="secondary"?openSecondary():goHome()}
 
+/* ПРОЄКТИ */
 const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
 const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
 function renderSecondary(){
@@ -355,6 +362,7 @@ function adjustProject(d){
 function openMainProject(n){mode="main";cur=n;showView('projectView');loadProj()}
 function openSecondaryProject(n){mode="secondary";cur=n;showView('projectView');loadProj()}
 
+/* КОНТЕКСТНЕ МЕНЮ ТА LONG PRESS */
 let pressTimer, lastX, lastY;
 const menu = document.getElementById('contextMenu');
 
@@ -415,6 +423,7 @@ function saveEdit(){
     loadDays(); updateToday(); closeEdit();
 }
 
+/* КОШИК */
 function moveToTrash(){
     const trashKey = "trash_" + editingKey;
     localStorage[trashKey] = localStorage[editingKey];
@@ -445,6 +454,7 @@ function restoreDay(trashKey){
     renderTrash(); loadDays(); updateToday();
 }
 
+/* СПИСОК ДНІВ */
 function loadDays(){
   const list=document.getElementById("daysList"); list.innerHTML="";
   const prefix = (mode==="main"?"main_":"sec_") + cur + "_";
@@ -460,6 +470,7 @@ function loadDays(){
   });
 }
 
+/* CSV */
 function exportCSV(){
   let c=""; Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c]));
