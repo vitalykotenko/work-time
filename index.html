@@ -1,269 +1,230 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Work Time</title>
 
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#000000" />
 
 <style>
-:root {
-  --bg: #000;
-  --card: rgba(28,28,30,0.78);
-  --accent: #0A84FF;
-  --accent-soft: rgba(10,132,255,0.25);
-  --text: #fff;
-  --radius: 18px;
-
-  --ios-stroke: rgba(255,255,255,0.18);
-  --ios-stroke-soft: rgba(255,255,255,0.08);
+:root{
+  --bg:#000;
+  --card:#1c1c1e;
+  --stroke:rgba(255,255,255,.18);
+  --accent:#0a84ff;
+  --radius:18px;
 }
-
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;
+  background:var(--bg);
+  color:#fff;
+  font-family:-apple-system,system-ui;
+  overflow:hidden;
 }
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
+.view{
+  position:absolute;
+  inset:0;
+  padding:16px;
+  transition:transform .35s ease;
 }
-
-/* ===== iOS 26 CARD STROKE ===== */
-.ios-card {
-  position: relative;
-  overflow: hidden;
+.hidden{display:none}
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  border:1px solid var(--stroke);
 }
-
-.ios-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  border: 1px solid var(--ios-stroke-soft);
-  box-shadow:
-    inset 0 0 0 0.5px var(--ios-stroke),
-    0 0 0.5px rgba(255,255,255,0.12);
+.btn{
+  padding:14px;
+  text-align:center;
+  border-radius:14px;
+  border:1px solid var(--stroke);
+  background:var(--card);
+  color:var(--accent);
 }
-
-/* ===== TOP BAR ===== */
-.top {
-  padding: 14px 16px;
-  display: flex;
-  gap: 10px;
-  backdrop-filter: blur(20px);
-  background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.85),
-    rgba(0,0,0,0.55)
-  );
-  border-bottom: 0.5px solid rgba(255,255,255,0.08);
+.btn:active{transform:scale(.96)}
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
 }
-
-.btn {
-  flex: 1;
-  text-align: center;
-  padding: 12px 0;
-  border-radius: 14px;
-  background: var(--card);
-  color: var(--accent);
-  font-size: 15px;
-  font-weight: 500;
-  transition: transform 0.12s ease, background 0.15s ease;
+.timer{
+  width:260px;
+  height:260px;
+  margin:40px auto;
+  border-radius:50%;
+  border:1px solid var(--stroke);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:40px;
 }
-
-.btn:active {
-  transform: scale(0.97);
-  background: rgba(44,44,46,0.9);
+.timer.active{
+  background:#102840;
 }
-
-/* ===== PROJECTS ===== */
-.projects {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  padding: 18px 16px 10px;
+.header{
+  display:flex;
+  gap:10px;
+  margin-bottom:16px;
 }
-
-.project {
-  background: var(--card);
-  backdrop-filter: blur(20px);
-  border-radius: var(--radius);
-  padding: 22px 0;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 600;
-  transition: transform 0.15s ease, background 0.15s ease;
+.project{
+  padding:22px 0;
+  text-align:center;
+  font-size:18px;
 }
-
-.project:active {
-  transform: scale(0.96);
-  background: rgba(44,44,46,0.9);
+.plus{
+  background:#2c2c2e;
+  color:#aaa;
 }
-
-/* ===== ASSIGN ===== */
-.assign {
-  display: flex;
-  gap: 12px;
-  padding: 6px 16px 14px;
+.back{
+  margin-bottom:16px;
 }
-
-/* ===== TIMER ===== */
-.timer-wrap {
-  display: flex;
-  justify-content: center;
-  margin: 36px 0 60px;
-}
-
-.timer {
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: var(--card);
-  backdrop-filter: blur(30px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  transition: transform 0.15s ease, background 0.25s ease;
-}
-
-.timer.active {
-  background: var(--accent-soft);
-}
-
-.timer.active::after {
-  border-color: rgba(10,132,255,0.55);
-  box-shadow:
-    inset 0 0 0 1px rgba(10,132,255,0.45),
-    0 0 18px rgba(10,132,255,0.35);
-}
-
-.timer:active {
-  transform: scale(0.96);
-}
-
-input[type="file"] { display: none; }
 </style>
 </head>
 <body>
 
-<!-- TOP -->
-<div class="top">
-  <div class="btn ios-card" id="exportCSV">Експорт CSV</div>
-  <div class="btn ios-card" id="importCSV">Імпорт CSV</div>
-  <input type="file" id="fileInput" accept=".csv">
+<!-- MAIN -->
+<div id="main" class="view">
+  <div class="header">
+    <div class="btn">Експорт CSV</div>
+    <div class="btn">Імпорт CSV</div>
+  </div>
+
+  <div class="grid2">
+    <div class="card project">Crypto</div>
+    <div class="card project">UAPP</div>
+  </div>
+
+  <div class="grid2" style="margin-top:14px">
+    <div class="btn">Зачислити в Crypto</div>
+    <div class="btn">Зачислити в UAPP</div>
+  </div>
+
+  <div id="mainTimer" class="timer">00:00:00</div>
 </div>
 
-<!-- PROJECTS -->
-<div class="projects">
-  <div class="project ios-card" onclick="openProject('crypto')">Crypto</div>
-  <div class="project ios-card" onclick="openProject('uapp')">UAPP</div>
+<!-- TEMP PROJECTS -->
+<div id="temps" class="view" style="transform:translateX(100%)">
+  <div class="grid2">
+    <div class="card project plus" onclick="createProject()">＋</div>
+  </div>
+  <div id="tempList" class="grid2" style="margin-top:14px"></div>
 </div>
 
-<!-- ASSIGN -->
-<div class="assign">
-  <div class="btn ios-card" onclick="assignTime('crypto')">Зачислити в Crypto</div>
-  <div class="btn ios-card" onclick="assignTime('uapp')">Зачислити в UAPP</div>
-</div>
-
-<!-- TIMER -->
-<div class="timer-wrap">
-  <div id="timer" class="timer ios-card">00:00:00</div>
+<!-- PROJECT VIEW -->
+<div id="projectView" class="view hidden">
+  <div class="btn back" onclick="backToTemps()">← Назад</div>
+  <div id="projectTitle" class="project card"></div>
+  <div id="projectTimer" class="timer">00:00:00</div>
 </div>
 
 <script>
-let running = false;
-let startAt = 0;
-let elapsed = Number(localStorage.getItem("elapsed")) || 0;
-let raf;
+let startX=0;
+document.addEventListener("touchstart",e=>startX=e.touches[0].clientX);
+document.addEventListener("touchend",e=>{
+  let dx=e.changedTouches[0].clientX-startX;
+  if(dx<-80) openTemps();
+  if(dx>80) openMain();
+});
 
-const timer = document.getElementById("timer");
+const main=document.getElementById("main");
+const temps=document.getElementById("temps");
+const projectView=document.getElementById("projectView");
 
-function fmt(ms) {
-  const s = Math.floor(ms / 1000);
-  const h = String(Math.floor(s / 3600)).padStart(2,"0");
-  const m = String(Math.floor((s % 3600) / 60)).padStart(2,"0");
-  const sec = String(s % 60).padStart(2,"0");
-  return `${h}:${m}:${sec}`;
+function openTemps(){
+  main.style.transform="translateX(-100%)";
+  temps.style.transform="translateX(0)";
+}
+function openMain(){
+  main.style.transform="translateX(0)";
+  temps.style.transform="translateX(100%)";
 }
 
-function render() {
-  const now = running ? elapsed + (Date.now() - startAt) : elapsed;
-  timer.textContent = fmt(now);
-  if (running) raf = requestAnimationFrame(render);
+let projects=JSON.parse(localStorage.getItem("projects_temp")||"[]");
+let current=null, raf;
+
+function save(){localStorage.setItem("projects_temp",JSON.stringify(projects))}
+
+function createProject(){
+  const name=prompt("Назва проєкту");
+  if(!name)return;
+  projects.unshift({
+    id:Date.now(),
+    name,
+    elapsed:0,
+    running:false,
+    startAt:0
+  });
+  save(); renderTemps();
 }
 
-timer.onclick = () => {
-  running = !running;
-  timer.classList.toggle("active", running);
+function renderTemps(){
+  const list=document.getElementById("tempList");
+  list.innerHTML="";
+  projects.forEach(p=>{
+    const d=document.createElement("div");
+    d.className="card project";
+    d.textContent=p.name;
+    d.onclick=()=>openProject(p.id);
+    list.appendChild(d);
+  });
+}
+renderTemps();
 
-  if (running) {
-    startAt = Date.now();
-    render();
-  } else {
-    elapsed += Date.now() - startAt;
-    localStorage.setItem("elapsed", elapsed);
+function openProject(id){
+  current=projects.find(p=>p.id===id);
+  projectView.classList.remove("hidden");
+  document.getElementById("projectTitle").textContent=current.name;
+  renderProjectTimer();
+}
+
+function backToTemps(){
+  stopProject();
+  projectView.classList.add("hidden");
+  save();
+}
+
+function fmt(ms){
+  const s=Math.floor(ms/1000);
+  return [
+    String(Math.floor(s/3600)).padStart(2,"0"),
+    String(Math.floor((s%3600)/60)).padStart(2,"0"),
+    String(s%60).padStart(2,"0")
+  ].join(":");
+}
+
+const pt=document.getElementById("projectTimer");
+pt.onclick=()=>{
+  current.running=!current.running;
+  pt.classList.toggle("active",current.running);
+  if(current.running){
+    current.startAt=Date.now();
+    loop();
+  }else stopProject();
+};
+
+function stopProject(){
+  if(current?.running){
+    current.elapsed+=Date.now()-current.startAt;
+    current.running=false;
     cancelAnimationFrame(raf);
   }
-};
-
-function assignTime(project) {
-  const key = `${project}_${new Date().toISOString().slice(0,10)}`;
-  const prev = Number(localStorage.getItem(key)) || 0;
-  localStorage.setItem(key, prev + elapsed);
-
-  elapsed = 0;
-  localStorage.setItem("elapsed", 0);
-  running = false;
-  timer.classList.remove("active");
-  timer.textContent = "00:00:00";
 }
 
-function openProject(name) {
-  alert(`Проєкт ${name.toUpperCase()} — аналітика буде далі`);
+function loop(){
+  pt.textContent=fmt(
+    current.elapsed+(Date.now()-current.startAt)
+  );
+  if(current.running) raf=requestAnimationFrame(loop);
 }
 
-document.getElementById("exportCSV").onclick = () => {
-  let csv = "project,date,ms\n";
-  Object.keys(localStorage)
-    .filter(k => k.includes("_"))
-    .forEach(k => {
-      const [p,d] = k.split("_");
-      csv += `${p},${d},${localStorage.getItem(k)}\n`;
-    });
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
-  a.download = "work-time.csv";
-  a.click();
-};
-
-document.getElementById("importCSV").onclick = () =>
-  document.getElementById("fileInput").click();
-
-fileInput.onchange = e => {
-  const r = new FileReader();
-  r.onload = () => {
-    r.result.split("\n").slice(1).forEach(l => {
-      if (!l) return;
-      const [p,d,v] = l.split(",");
-      localStorage.setItem(`${p}_${d}`, v);
-    });
-    alert("Імпортовано");
-  };
-  r.readAsText(e.target.files[0]);
-};
-
-timer.textContent = fmt(elapsed);
+function renderProjectTimer(){
+  pt.textContent=fmt(current.elapsed);
+  pt.classList.toggle("active",current.running);
+}
 </script>
 </body>
 </html>
