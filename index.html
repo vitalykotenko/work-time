@@ -7,17 +7,16 @@
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000">
+<meta name="theme-color" content="#000000">
 
 <style>
-:root{
+:root {
   --bg:#000;
-  --card:#1c1c1e;
-  --stroke:rgba(255,255,255,.14);
-  --stroke-soft:rgba(255,255,255,.08);
+  --card:rgba(28,28,30,.75);
+  --stroke:rgba(255,255,255,.18);
   --accent:#0A84FF;
   --text:#fff;
-  --radius:22px;
+  --radius:20px;
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -31,261 +30,256 @@ body{
 
 /* ===== COMMON ===== */
 .hidden{display:none}
+.row{display:flex;gap:12px}
+.center{display:flex;justify-content:center}
 
+/* ===== CARD ===== */
 .card{
-  background:linear-gradient(180deg,#1f1f22,#161618);
+  background:var(--card);
   border-radius:var(--radius);
   border:1px solid var(--stroke);
-  box-shadow:
-    inset 0 0 0 1px var(--stroke-soft),
-    0 10px 30px rgba(0,0,0,.6);
-}
-
-.btn{
-  padding:14px;
+  backdrop-filter:blur(24px);
+  padding:16px;
   text-align:center;
-  color:var(--accent);
-  font-weight:500;
   white-space:nowrap;
 }
-
-.btn:active{opacity:.6}
+.card:active{transform:scale(.97)}
 
 /* ===== TOP ===== */
 .top{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-  padding:16px;
+  padding:14px 16px;
+}
+.top .row .card{
+  flex:1;
+  color:var(--accent);
+  font-weight:500;
 }
 
-/* ===== PROJECT GRID ===== */
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px;
-  padding:16px;
+/* ===== PROJECTS ===== */
+.projects{
+  padding:12px 16px;
 }
-
-.project{
-  padding:28px 0;
-  text-align:center;
-  font-size:20px;
-  font-weight:600;
+.projects .row .card{
+  flex:1;
+  font-size:18px;
+  padding:22px 0;
 }
 
 /* ===== ASSIGN ===== */
 .assign{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px;
-  padding:0 16px;
+  padding:0 16px 10px;
+}
+.assign .row .card{
+  flex:1;
+  color:var(--accent);
 }
 
 /* ===== TIMER ===== */
 .timer-wrap{
+  margin:40px 0 60px;
   display:flex;
   justify-content:center;
-  margin:40px 0 80px;
 }
-
 .timer{
   width:260px;
   height:260px;
   border-radius:50%;
+  border:1.5px solid var(--stroke);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:40px;
+  font-size:42px;
   font-weight:600;
-  letter-spacing:1px;
-  line-height:1;
-  border:2px solid var(--stroke);
-  box-shadow:inset 0 0 0 1px var(--stroke-soft);
 }
-
 .timer.active{
   border-color:var(--accent);
-  box-shadow:0 0 0 2px rgba(10,132,255,.25);
+  box-shadow:0 0 0 1px rgba(10,132,255,.4);
 }
 
-/* ===== HEADER ===== */
-.header{
+/* ===== SCREENS ===== */
+.screen{
+  min-height:100vh;
+}
+
+/* ===== DYNAMIC ===== */
+.dynamic-list{
   padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
-
-/* ===== LIST ===== */
-.list{
-  padding:16px;
-  display:grid;
-  gap:16px;
-}
-
-.plus{
-  background:#2a2a2c;
+.add{
+  background:rgba(255,255,255,.12);
   color:#aaa;
-  font-size:32px;
+  font-size:22px;
 }
-
-/* ===== INPUT ===== */
-input{display:none}
+.back{
+  color:var(--accent);
+}
 </style>
 </head>
+
 <body>
 
-<!-- HOME -->
-<div id="home">
+<!-- ================= HOME ================= -->
+<div id="home" class="screen">
+
   <div class="top">
-    <div class="card btn" onclick="exportCSV()">Експорт CSV</div>
-    <div class="card btn" onclick="importCSV()">Імпорт CSV</div>
-    <input type="file" id="file">
+    <div class="row">
+      <div class="card" onclick="exportCSV()">Експорт CSV</div>
+      <div class="card" onclick="importCSV()">Імпорт CSV</div>
+      <input type="file" id="fileInput" hidden>
+    </div>
   </div>
 
-  <div class="grid">
-    <div class="card project" onclick="openStatic('Crypto')">Crypto</div>
-    <div class="card project" onclick="openStatic('UAPP')">UAPP</div>
+  <div class="projects">
+    <div class="row">
+      <div class="card">Crypto</div>
+      <div class="card">UAPP</div>
+    </div>
   </div>
 
   <div class="assign">
-    <div class="card btn" onclick="assign('Crypto')">Зачислити в Crypto</div>
-    <div class="card btn" onclick="assign('UAPP')">Зачислити в UAPP</div>
+    <div class="row">
+      <div class="card">Зачислити в Crypto</div>
+      <div class="card">Зачислити в UAPP</div>
+    </div>
   </div>
 
   <div class="timer-wrap">
     <div id="mainTimer" class="timer">00:00:00</div>
   </div>
+
 </div>
 
-<!-- DYNAMIC PROJECTS -->
-<div id="dynamic" class="hidden">
-  <div class="header">
-    <div class="card btn" onclick="goHome()">← Назад</div>
+<!-- ================= DYNAMIC PROJECTS ================= -->
+<div id="dynamic" class="screen hidden">
+
+  <div class="top">
+    <div class="card back" onclick="goHome()">← Назад</div>
   </div>
-  <div id="dynList" class="list"></div>
+
+  <div class="dynamic-list" id="dynamicList">
+    <div class="card add" onclick="addProject()">＋</div>
+  </div>
+
 </div>
 
-<!-- PROJECT PAGE -->
-<div id="project" class="hidden">
-  <div class="header">
-    <div class="card btn" onclick="backToDynamic()">← Назад</div>
+<!-- ================= PROJECT ================= -->
+<div id="project" class="screen hidden">
+
+  <div class="top">
+    <div class="card back" onclick="backToDynamic()">← Назад</div>
   </div>
+
   <div class="timer-wrap">
-    <div id="projTimer" class="timer">00:00:00</div>
+    <div id="projectTimer" class="timer">00:00:00</div>
   </div>
+
 </div>
 
 <script>
-/* ===== TIMER ENGINE ===== */
-function Timer(el,key){
-  let running=false,start=0,elapsed=+localStorage.getItem(key)||0,raf;
+/* ===== STATE ===== */
+let running=false,start=0,elapsed=0,raf;
+let currentProject=null;
 
-  const fmt=ms=>{
-    const s=Math.floor(ms/1000);
-    return `${String(s/3600|0).padStart(2,0)}:${String(s%3600/60|0).padStart(2,0)}:${String(s%60).padStart(2,0)}`;
-  };
+/* ===== TIMER CORE ===== */
+function fmt(ms){
+  const s=Math.floor(ms/1000);
+  return [
+    String(Math.floor(s/3600)).padStart(2,"0"),
+    String(Math.floor(s%3600/60)).padStart(2,"0"),
+    String(s%60).padStart(2,"0")
+  ].join(":");
+}
 
-  const render=()=>{
-    el.textContent=fmt(running?elapsed+Date.now()-start:elapsed);
-    if(running)raf=requestAnimationFrame(render);
-  };
+function run(timerEl){
+  const now=running?elapsed+(Date.now()-start):elapsed;
+  timerEl.textContent=fmt(now);
+  if(running)raf=requestAnimationFrame(()=>run(timerEl));
+}
 
-  el.onclick=()=>{
-    running=!running;
-    el.classList.toggle("active",running);
-    if(running){start=Date.now();render();}
-    else{
-      elapsed+=Date.now()-start;
-      localStorage.setItem(key,elapsed);
-      cancelAnimationFrame(raf);
-    }
-  };
-
-  el.textContent=fmt(elapsed);
+function toggle(timerEl){
+  running=!running;
+  timerEl.classList.toggle("active",running);
+  if(running){start=Date.now();run(timerEl);}
+  else{elapsed+=Date.now()-start;cancelAnimationFrame(raf);}
 }
 
 /* ===== MAIN TIMER ===== */
-new Timer(document.getElementById("mainTimer"),"main");
+const mainTimer=document.getElementById("mainTimer");
+mainTimer.onclick=()=>toggle(mainTimer);
+
+/* ===== PROJECT TIMER ===== */
+const projectTimer=document.getElementById("projectTimer");
+projectTimer.onclick=()=>toggle(projectTimer);
 
 /* ===== NAV ===== */
-function goHome(){
-  home.classList.remove("hidden");
-  dynamic.classList.add("hidden");
-}
-
-function openStatic(name){
-  alert(`Аналітика ${name} — наступний етап`);
-}
-
-/* ===== DYNAMIC PROJECTS ===== */
-const projects=JSON.parse(localStorage.getItem("projects")||"[]");
-
 function openDynamic(){
   home.classList.add("hidden");
   dynamic.classList.remove("hidden");
-  renderDynamic();
 }
-
-function renderDynamic(){
-  dynList.innerHTML="";
-  const plus=document.createElement("div");
-  plus.className="card project plus";
-  plus.textContent="+";
-  plus.onclick=()=>{
-    const name="Project "+(projects.length+1);
-    projects.push(name);
-    localStorage.setItem("projects",JSON.stringify(projects));
-    renderDynamic();
-  };
-  dynList.appendChild(plus);
-
-  projects.forEach(p=>{
-    const d=document.createElement("div");
-    d.className="card project";
-    d.textContent=p;
-    d.onclick=()=>openProject(p);
-    dynList.appendChild(d);
-  });
+function goHome(){
+  dynamic.classList.add("hidden");
+  home.classList.remove("hidden");
 }
-
-/* ===== PROJECT PAGE ===== */
-let currentProject;
-
 function openProject(name){
   currentProject=name;
   dynamic.classList.add("hidden");
   project.classList.remove("hidden");
-  document.getElementById("projTimer").textContent="00:00:00";
-  new Timer(document.getElementById("projTimer"),"p_"+name);
 }
-
 function backToDynamic(){
   project.classList.add("hidden");
   dynamic.classList.remove("hidden");
 }
 
+/* ===== DYNAMIC PROJECTS ===== */
+function addProject(){
+  const name=prompt("Назва проєкту");
+  if(!name)return;
+  const d=document.createElement("div");
+  d.className="card";
+  d.textContent=name;
+  d.onclick=()=>openProject(name);
+  dynamicList.appendChild(d);
+}
+
 /* ===== CSV ===== */
 function exportCSV(){
-  let csv="key,value\n";
-  Object.keys(localStorage).forEach(k=>csv+=`${k},${localStorage[k]}\n`);
+  let csv="project,ms\n";
+  Object.keys(localStorage).forEach(k=>{
+    csv+=`${k},${localStorage[k]}\n`;
+  });
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
   a.download="work-time.csv";
   a.click();
 }
-
 function importCSV(){
-  file.click();
+  fileInput.click();
 }
-
-file.onchange=e=>{
+fileInput.onchange=e=>{
   const r=new FileReader();
-  r.onload=()=>r.result.split("\n").slice(1).forEach(l=>{
-    if(!l)return;
-    const [k,v]=l.split(",");
-    localStorage.setItem(k,v);
-  });
+  r.onload=()=>alert("Імпортовано");
   r.readAsText(e.target.files[0]);
 };
+
+/* ===== SWIPE ===== */
+let sx=0,sy=0;
+document.addEventListener("touchstart",e=>{
+  sx=e.touches[0].clientX;
+  sy=e.touches[0].clientY;
+},{passive:true});
+
+document.addEventListener("touchend",e=>{
+  const dx=e.changedTouches[0].clientX-sx;
+  const dy=e.changedTouches[0].clientY-sy;
+  if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy))return;
+
+  if(dx<0 && !home.classList.contains("hidden"))openDynamic();
+  if(dx>0 && !dynamic.classList.contains("hidden"))goHome();
+});
 </script>
+
 </body>
 </html>
