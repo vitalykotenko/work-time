@@ -375,14 +375,26 @@ function openSecondaryProject(n){mode="secondary";cur=n;projectsView.classList.a
 function loadDays(){
   daysList.innerHTML="";
   Object.keys(localStorage)
-    .filter(k=>k.startsWith((mode==="main"?"main_":"sec_")+cur+"_"))
-    .sort().reverse()
-    .forEach(k=>{
-      const d=k.split("_")[2];
-      const D=new Date(d);
-      const row=document.createElement("div");
-      row.className="day";
-      row.innerHTML=`<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span><span>${fmt(+localStorage[k])}</span>`;
+    .filter(k => k.startsWith((mode==="main" ? "main_" : "sec_") + cur + "_"))
+    .sort()
+    .reverse()
+    .forEach(k => {
+      const d = k.split("_")[2];
+      const D = new Date(d);
+
+      const row = document.createElement("div");
+      row.className = "day";
+      row.innerHTML =
+        `<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span>
+         <span>${fmt(+localStorage[k])}</span>`;
+
+      // ВЫДЕЛЕНИЕ СТРОКИ ПРИ КЛИКЕ
+      row.onclick = () => {
+        document.querySelectorAll(".day")
+          .forEach(x => x.classList.remove("active"));
+        row.classList.add("active");
+      };
+
       daysList.appendChild(row);
     });
 }
