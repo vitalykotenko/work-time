@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,6 +32,7 @@ body{
 }
 .hidden{display:none}
 
+/* ОБЩИЕ СТИЛИ */
 .btn,.card,.timer,.day,.adjust, .input-card{
   background:var(--glass);
   backdrop-filter:blur(26px);
@@ -47,6 +48,7 @@ body{
   display: flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap; /* ФИКС: Текст всегда в одну строку */
 }
 .btn:active,.adjust:active{transform:scale(.95)}
 .btn.disabled{opacity:.35;pointer-events:none}
@@ -119,12 +121,7 @@ body{
   top:0;
   width:200%;
   height:200%;
-  background:linear-gradient(
-    90deg,
-    rgba(10,132,255,.35),
-    rgba(10,132,255,.15),
-    rgba(10,132,255,.35)
-  );
+  background:linear-gradient(90deg, rgba(10,132,255,.35), rgba(10,132,255,.15), rgba(10,132,255,.35));
   border-radius:45%;
   opacity:0;
 }
@@ -165,7 +162,7 @@ body{
   padding:16px 14px;
   font-size:15px;
 }
-.day .status-text { font-size: 12px; opacity: 0.6; }
+.day .status-text { font-size: 11px; opacity: 0.6; color: var(--accent); }
 
 .edit-container {
     padding: 20px;
@@ -206,23 +203,23 @@ input[type=file]{display:none}
 
 <div id="home">
   <div class="top">
-    <div class="btn" onclick="exportCSV()">Експорт CSV</div>
-    <div class="btn" onclick="importCSV()">Імпорт CSV</div>
+    <div class="btn" onclick="exportCSV()">Экспорт CSV</div>
+    <div class="btn" onclick="importCSV()">Импорт CSV</div>
     <input type="file" id="fileInput">
   </div>
   <div class="projects">
     <div class="card project" onclick="openMainProject('Crypto')">
       <div class="name">Crypto</div>
-      <div class="today" id="today_crypto">Сьогодні 00:00:00</div>
+      <div class="today" id="today_crypto">Сегодня 00:00:00</div>
     </div>
     <div class="card project" onclick="openMainProject('UAPP')">
       <div class="name">UAPP</div>
-      <div class="today" id="today_uapp">Сьогодні 00:00:00</div>
+      <div class="today" id="today_uapp">Сегодня 00:00:00</div>
     </div>
   </div>
   <div class="assign">
-    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
-    <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
+    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислить в Crypto</div>
+    <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислить в UAPP</div>
   </div>
   <div class="timer-wrap">
     <div id="mainTimer" class="timer">
@@ -237,7 +234,7 @@ input[type=file]{display:none}
     <div class="adjust" onclick="adjustMain(600000)">+10</div>
   </div>
   <div class="bottom">
-    <div class="btn" onclick="openSecondary()">Проєкти</div>
+    <div class="btn" onclick="openSecondary()">Проекты</div>
   </div>
 </div>
 
@@ -253,7 +250,7 @@ input[type=file]{display:none}
 <div id="projectView" class="hidden">
   <div class="header">
     <div class="btn" onclick="backFromProject()">← Назад</div>
-    <div class="btn danger" onclick="openTrash()">🗑 Кошик</div>
+    <div class="btn danger" onclick="openTrash()">🗑 Корзина</div>
   </div>
   <div class="timer-wrap">
     <div id="projectTimer" class="timer">
@@ -275,15 +272,15 @@ input[type=file]{display:none}
         <div class="btn" onclick="showView('projectView')">← Назад</div>
     </div>
     <div class="edit-container">
-        <div class="edit-label">Видалені записи (затисніть для відновлення)</div>
+        <div class="edit-label">Корзина (зажмите для восстановления)</div>
         <div class="days" id="trashList"></div>
     </div>
 </div>
 
 <div id="editView" class="hidden">
     <div class="header">
-        <div class="btn" onclick="closeEdit()">← Скасувати</div>
-        <div class="btn" onclick="saveEdit()">Зберегти</div>
+        <div class="btn" onclick="closeEdit()">← Отмена</div>
+        <div class="btn" onclick="saveEdit()">Сохранить</div>
     </div>
     <div class="edit-container">
         <div>
@@ -292,12 +289,12 @@ input[type=file]{display:none}
                 <input type="text" id="editTimeInput" class="time-input">
             </div>
         </div>
-        <div class="btn danger" onclick="moveToTrash()">Видалити в кошик</div>
+        <div class="btn danger" onclick="moveToTrash()">Удалить в корзину</div>
     </div>
 </div>
 
 <script>
-const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
+const daysRU=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
   const s=Math.floor(Math.abs(t)/1000);
   return String(Math.floor(s/3600)).padStart(2,"0")+":"+
@@ -311,6 +308,7 @@ const parseFmt = s => {
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
+/* ГЛАВНЫЙ ТАЙМЕР */
 let main={t:+localStorage.main_total||0, s:+localStorage.main_start||0, run:false};
 const mainTimer=document.getElementById("mainTimer");
 if(main.s){ main.run=true; mainTimer.classList.add("active"); }
@@ -347,11 +345,12 @@ function updateAssign(){
 function updateToday(){
   ["Crypto","UAPP"].forEach(p=>{
     const el=document.getElementById("today_"+p.toLowerCase());
-    if(el)el.textContent="Сьогодні "+fmt(+localStorage[k("main",p)]||0);
+    if(el)el.textContent="Сегодня "+fmt(+localStorage[k("main",p)]||0);
   });
 }
 tickMain(); updateToday();
 
+/* НАВИГАЦИЯ */
 let mode=null, cur=null, editingKey=null;
 function showView(id){
     ['home','projectsView','projectView','editView','trashView'].forEach(v=>document.getElementById(v).classList.toggle('hidden',v!==id));
@@ -360,6 +359,7 @@ function goHome(){showView('home')}
 function openSecondary(){renderSecondary(); showView('projectsView')}
 function backFromProject(){mode==="secondary"?openSecondary():goHome()}
 
+/* ПРОЕКТЫ */
 const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
 const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
 function renderSecondary(){
@@ -371,10 +371,11 @@ function renderSecondary(){
   });
 }
 function addSecondary(){
-  const n=prompt("Назва проєкту"); if(!n)return;
+  const n=prompt("Название проекта"); if(!n)return;
   const l=getSec(); l.unshift(n); saveSec(l); renderSecondary();
 }
 
+/* ТАЙМЕР ВНУТРИ ПРОЕКТА */
 let proj={run:false,t:0,s:0};
 const projectTimer=document.getElementById("projectTimer");
 function loadProj(){
@@ -410,24 +411,25 @@ function adjustProject(d){
 function openMainProject(n){mode="main";cur=n;showView('projectView');loadProj()}
 function openSecondaryProject(n){mode="secondary";cur=n;showView('projectView');loadProj()}
 
+/* РЕДАКТИРОВАНИЕ И ДОЛГОЕ НАЖАТИЕ */
 let pressTimer;
 function dayTouchStart(key, isTrash=false){ pressTimer=setTimeout(()=>isTrash?restoreDay(key):openEditDay(key),700); }
 function dayTouchEnd(){ clearTimeout(pressTimer); }
 
 function openEditDay(key){
     editingKey=key;
-    document.getElementById('editDateLabel').textContent="Редагування: "+key.split('_')[2];
+    document.getElementById('editDateLabel').textContent="Редактирование: "+key.split('_')[2];
     document.getElementById('editTimeInput').value=fmt(+localStorage[key]||0);
     showView('editView');
 }
 function closeEdit(){showView('projectView')}
 function saveEdit(){
     localStorage[editingKey]=parseFmt(document.getElementById('editTimeInput').value);
-    if(editingKey.endsWith(dayKey())){ proj.t=localStorage[editingKey]; localStorage[`proj_${mode}_${cur}_total`]=proj.t; }
+    if(editingKey.endsWith(dayKey())){ proj.t=+localStorage[editingKey]; localStorage[`proj_${mode}_${cur}_total`]=proj.t; }
     loadDays(); updateToday(); closeEdit();
 }
 
-// LOGIC: TRASH
+/* КОРЗИНА */
 function moveToTrash(){
     const trashKey = "trash_" + editingKey;
     localStorage[trashKey] = localStorage[editingKey];
@@ -435,48 +437,43 @@ function moveToTrash(){
     if(editingKey.endsWith(dayKey())){ proj.t=0; localStorage[`proj_${mode}_${cur}_total`]=0; }
     loadDays(); updateToday(); closeEdit();
 }
-
-function openTrash(){
-    showView('trashView');
-    renderTrash();
-}
-
+function openTrash(){ showView('trashView'); renderTrash(); }
 function renderTrash(){
-    const list=document.getElementById("trashList");
-    list.innerHTML="";
+    const list=document.getElementById("trashList"); list.innerHTML="";
     const prefix = "trash_" + (mode==="main"?"main_":"sec_") + cur + "_";
     Object.keys(localStorage).filter(k=>k.startsWith(prefix)).sort().reverse().forEach(key=>{
         const d=key.split("_")[3];
         const row=document.createElement("div"); row.className="day";
-        row.innerHTML=`<span>${d}</span><span class="status-text">Затисніть щоб відновити</span><span>${fmt(+localStorage[key])}</span>`;
+        row.innerHTML=`<span>${d}</span><span class="status-text">Зажмите для восстановления</span><span>${fmt(+localStorage[key])}</span>`;
         row.onmousedown=()=>dayTouchStart(key, true); row.onmouseup=dayTouchEnd;
         row.ontouchstart=()=>dayTouchStart(key, true); row.ontouchend=dayTouchEnd;
         list.appendChild(row);
     });
 }
-
 function restoreDay(trashKey){
     const originalKey = trashKey.replace("trash_", "");
     localStorage[originalKey] = localStorage[trashKey];
     localStorage.removeItem(trashKey);
     if(originalKey.endsWith(dayKey())){ proj.t=+localStorage[originalKey]; localStorage[`proj_${mode}_${cur}_total`]=proj.t; }
     renderTrash(); loadDays(); updateToday();
-    alert("Запис відновлено!");
+    alert("Запись восстановлена!");
 }
 
+/* СПИСОК ДНЕЙ */
 function loadDays(){
   const list=document.getElementById("daysList"); list.innerHTML="";
   const prefix = (mode==="main"?"main_":"sec_") + cur + "_";
   Object.keys(localStorage).filter(k=>k.startsWith(prefix)).sort().reverse().forEach(key=>{
       const d=key.split("_")[2]; const D=new Date(d);
       const row=document.createElement("div"); row.className="day";
-      row.innerHTML=`<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span><span style="color:var(--accent)">Редагувати</span><span>${fmt(+localStorage[key])}</span>`;
+      row.innerHTML=`<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysRU[D.getDay()]}</span><span class="status-text">Редактировать</span><span>${fmt(+localStorage[key])}</span>`;
       row.onmousedown=()=>dayTouchStart(key); row.onmouseup=dayTouchEnd;
       row.ontouchstart=()=>dayTouchStart(key); row.ontouchend=dayTouchEnd;
       list.appendChild(row);
   });
 }
 
+/* ИМПОРТ/ЭКСПОРТ */
 function exportCSV(){
   let c=""; Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c]));
