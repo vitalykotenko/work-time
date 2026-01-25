@@ -410,21 +410,31 @@ function tickProj(){
 projectTimer.onclick = () => {
   const base = `proj_${mode}_${cur}`;
 
-  if(proj.run){
+  if (proj.run) {
     // STOP
-    proj.t += Date.now() - proj.s;
+    const delta = Date.now() - proj.s;
+
+    proj.t += delta;
     proj.s = 0;
     proj.run = false;
 
-    localStorage[base+"_start"] = 0;
-    localStorage[base+"_total"] = proj.t;
+    // 🔥 ДОБАВЛЯЕМ В ДЕНЬ
+    const dayKey = k(mode === "main" ? "main" : "sec", cur);
+    localStorage[dayKey] =
+      (+(localStorage[dayKey] || 0)) + delta;
+
+    localStorage[base + "_start"] = 0;
+    localStorage[base + "_total"] = proj.t;
+
+    loadDays();
+    updateToday();
   } else {
     // START
     proj.s = Date.now();
     proj.run = true;
 
-    localStorage[base+"_start"] = proj.s;
-    localStorage[base+"_total"] = proj.t;
+    localStorage[base + "_start"] = proj.s;
+    localStorage[base + "_total"] = proj.t;
   }
 
   projectTimer.classList.toggle("active", proj.run);
