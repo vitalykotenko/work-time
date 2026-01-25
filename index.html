@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Work Time</title>
+<title>Work Time Pro</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,6 +17,7 @@
   --stroke:rgba(255,255,255,.18);
   --stroke-soft:rgba(255,255,255,.08);
   --accent:#0A84FF;
+  --danger:#FF453A;
   --radius:22px;
   --sub:#8E8E93;
 }
@@ -27,11 +28,11 @@ body{
   background:var(--bg);
   color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
+  user-select: none;
 }
 .hidden{display:none}
 
-/* COMMON */
-.btn,.card,.timer,.day,.adjust{
+.btn,.card,.timer,.day,.adjust, .input-card{
   background:var(--glass);
   backdrop-filter:blur(26px);
   border-radius:var(--radius);
@@ -43,13 +44,16 @@ body{
   text-align:center;
   color:var(--accent);
   font-size:16px;
-  white-space:nowrap; /* ВАЖНО — фикс переноса */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .btn:active,.adjust:active{transform:scale(.95)}
 .btn.disabled{opacity:.35;pointer-events:none}
+.btn.danger{color:var(--danger)}
+
 .card{padding:18px}
 
-/* TOP */
 .top{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -57,7 +61,14 @@ body{
   padding:14px;
 }
 
-/* HOME PROJECTS */
+.header{
+    display: flex;
+    justify-content: space-between;
+    padding: 14px;
+    gap: 12px;
+}
+.header .btn { flex: 1; }
+
 .projects{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -71,7 +82,6 @@ body{
   color:var(--sub);
 }
 
-/* ASSIGN */
 .assign{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -79,7 +89,6 @@ body{
   padding:14px;
 }
 
-/* TIMER */
 .timer-wrap{
   display:flex;
   justify-content:center;
@@ -104,7 +113,6 @@ body{
 }
 .timer .time{z-index:2}
 
-/* WAVE */
 .wave{
   position:absolute;
   left:-50%;
@@ -129,7 +137,6 @@ body{
   to{transform:translateX(25%) rotate(360deg)}
 }
 
-/* TIME ADJUST */
 .time-adjust{
   display:flex;
   justify-content:center;
@@ -147,7 +154,6 @@ body{
   font-size:15px;
 }
 
-/* DAYS */
 .days{
   padding:14px;
   display:grid;
@@ -156,18 +162,29 @@ body{
 .day{
   display:flex;
   justify-content:space-between;
-  padding:12px 14px;
+  padding:16px 14px;
   font-size:15px;
 }
-.day.active{
-  background:rgba(10,132,255,.18);
-  border-color:rgba(10,132,255,.55);
+.day .status-text { font-size: 12px; opacity: 0.6; }
+
+.edit-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.edit-label {
+    color: var(--sub);
+    font-size: 14px;
+    margin-bottom: 8px;
+    padding-left: 10px;
+}
+.input-card { padding: 15px; }
+input.time-input {
+    background: transparent; border: none; color: #fff;
+    font-size: 32px; width: 100%; text-align: center; outline: none;
 }
 
-/* HEADER */
-.header{padding:14px}
-
-/* SECONDARY */
 .secondary-list{
   padding:14px;
   display:grid;
@@ -180,8 +197,6 @@ body{
   padding:22px 0;
   color:#aaa;
 }
-
-/* BOTTOM */
 .bottom{padding:14px}
 input[type=file]{display:none}
 </style>
@@ -189,14 +204,12 @@ input[type=file]{display:none}
 
 <body>
 
-<!-- HOME -->
 <div id="home">
   <div class="top">
     <div class="btn" onclick="exportCSV()">Експорт CSV</div>
     <div class="btn" onclick="importCSV()">Імпорт CSV</div>
     <input type="file" id="fileInput">
   </div>
-
   <div class="projects">
     <div class="card project" onclick="openMainProject('Crypto')">
       <div class="name">Crypto</div>
@@ -207,32 +220,27 @@ input[type=file]{display:none}
       <div class="today" id="today_uapp">Сьогодні 00:00:00</div>
     </div>
   </div>
-
   <div class="assign">
     <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
     <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
   </div>
-
   <div class="timer-wrap">
     <div id="mainTimer" class="timer">
       <div class="wave"></div>
       <span class="time">00:00:00</span>
     </div>
   </div>
-
   <div class="time-adjust">
     <div class="adjust" onclick="adjustMain(-600000)">-10</div>
     <div class="adjust" onclick="adjustMain(-60000)">-1</div>
     <div class="adjust" onclick="adjustMain(60000)">+1</div>
     <div class="adjust" onclick="adjustMain(600000)">+10</div>
   </div>
-
   <div class="bottom">
     <div class="btn" onclick="openSecondary()">Проєкти</div>
   </div>
 </div>
 
-<!-- SECONDARY -->
 <div id="projectsView" class="hidden">
   <div class="header">
     <div class="btn" onclick="goHome()">← Назад</div>
@@ -242,10 +250,10 @@ input[type=file]{display:none}
   </div>
 </div>
 
-<!-- PROJECT -->
 <div id="projectView" class="hidden">
   <div class="header">
     <div class="btn" onclick="backFromProject()">← Назад</div>
+    <div class="btn danger" onclick="openTrash()">🗑 Кошик</div>
   </div>
   <div class="timer-wrap">
     <div id="projectTimer" class="timer">
@@ -262,244 +270,225 @@ input[type=file]{display:none}
   <div class="days" id="daysList"></div>
 </div>
 
+<div id="trashView" class="hidden">
+    <div class="header">
+        <div class="btn" onclick="showView('projectView')">← Назад</div>
+    </div>
+    <div class="edit-container">
+        <div class="edit-label">Видалені записи (затисніть для відновлення)</div>
+        <div class="days" id="trashList"></div>
+    </div>
+</div>
+
+<div id="editView" class="hidden">
+    <div class="header">
+        <div class="btn" onclick="closeEdit()">← Скасувати</div>
+        <div class="btn" onclick="saveEdit()">Зберегти</div>
+    </div>
+    <div class="edit-container">
+        <div>
+            <div class="edit-label" id="editDateLabel">Дата</div>
+            <div class="input-card">
+                <input type="text" id="editTimeInput" class="time-input">
+            </div>
+        </div>
+        <div class="btn danger" onclick="moveToTrash()">Видалити в кошик</div>
+    </div>
+</div>
+
 <script>
-/* JS — стабильная версия */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
-  const s=Math.floor(t/1000);
+  const s=Math.floor(Math.abs(t)/1000);
   return String(Math.floor(s/3600)).padStart(2,"0")+":"+
          String(Math.floor(s%3600/60)).padStart(2,"0")+":"+
          String(s%60).padStart(2,"0");
 };
+const parseFmt = s => {
+    const p = s.split(':').map(Number);
+    return p.length===3 ? (p[0]*3600+p[1]*60+p[2])*1000 : 0;
+};
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
-/* MAIN */
-let main = {
-  t: +localStorage.main_total || 0,
-  s: +localStorage.main_start || 0,
-  run: false
-};
-
-const mainTimer = document.getElementById("mainTimer");
-
-// восстановление состояния после reload
-if (main.s) {
-  main.run = true;
-  mainTimer.classList.add("active");
-}
+let main={t:+localStorage.main_total||0, s:+localStorage.main_start||0, run:false};
+const mainTimer=document.getElementById("mainTimer");
+if(main.s){ main.run=true; mainTimer.classList.add("active"); }
 
 function tickMain(){
-  const v = main.run
-    ? main.t + (Date.now() - main.s)
-    : main.t;
-
+  const v = main.run ? main.t+(Date.now()-main.s) : main.t;
   mainTimer.querySelector(".time").textContent = fmt(v);
-  updateAssign();
-  requestAnimationFrame(tickMain);
+  updateAssign(); requestAnimationFrame(tickMain);
 }
-
-mainTimer.onclick = () => {
-  if (main.run) {
-    // STOP
-    main.t += Date.now() - main.s;
-    main.s = 0;
-    main.run = false;
-
-    localStorage.main_start = 0;
-    localStorage.main_total = main.t;
+mainTimer.onclick=()=>{
+  if(main.run){
+    main.t+=Date.now()-main.s; main.s=0; main.run=false;
+    localStorage.main_start=0; localStorage.main_total=main.t;
     mainTimer.classList.remove("active");
   } else {
-    // START
-    main.s = Date.now();
-    main.run = true;
-
-    localStorage.main_start = main.s;
-    localStorage.main_total = main.t;
+    main.s=Date.now(); main.run=true;
+    localStorage.main_start=main.s; localStorage.main_total=main.t;
     mainTimer.classList.add("active");
   }
 };
-
-function adjustMain(d){
-  main.t = Math.max(0, main.t + d);
-  localStorage.main_total = main.t;
-}
-
+function adjustMain(d){ main.t=Math.max(0,main.t+d); localStorage.main_total=main.t; }
 function assignMain(p){
-  if (!main.t) return;
-
-  localStorage[k("main", p)] =
-    (+(localStorage[k("main", p)] || 0)) + main.t;
-
-  main = { t: 0, s: 0, run: false };
-  localStorage.main_start = 0;
-  localStorage.main_total = 0;
-
-  mainTimer.classList.remove("active");
-  updateToday();
+  if(!main.t)return;
+  const key=k("main",p);
+  localStorage[key]=(+(localStorage[key]||0))+main.t;
+  main={t:0,s:0,run:false}; localStorage.main_start=0; localStorage.main_total=0;
+  mainTimer.classList.remove("active"); updateToday();
 }
-
 function updateAssign(){
-  const a = main.t > 0;
-  assignCrypto.classList.toggle("disabled", !a);
-  assignUapp.classList.toggle("disabled", !a);
+  const a=main.t>0;
+  document.getElementById("assignCrypto").classList.toggle("disabled",!a);
+  document.getElementById("assignUapp").classList.toggle("disabled",!a);
 }
-
 function updateToday(){
   ["Crypto","UAPP"].forEach(p=>{
-    document.getElementById("today_"+p.toLowerCase())
-      .textContent = "Сьогодні " + fmt(+localStorage[k("main",p)] || 0);
+    const el=document.getElementById("today_"+p.toLowerCase());
+    if(el)el.textContent="Сьогодні "+fmt(+localStorage[k("main",p)]||0);
   });
 }
+tickMain(); updateToday();
 
-tickMain();
-updateToday();
+let mode=null, cur=null, editingKey=null;
+function showView(id){
+    ['home','projectsView','projectView','editView','trashView'].forEach(v=>document.getElementById(v).classList.toggle('hidden',v!==id));
+}
+function goHome(){showView('home')}
+function openSecondary(){renderSecondary(); showView('projectsView')}
+function backFromProject(){mode==="secondary"?openSecondary():goHome()}
 
-/* NAV */
-let mode=null,cur=null;
-const home=document.getElementById("home");
-const projectsView=document.getElementById("projectsView");
-const projectView=document.getElementById("projectView");
-
-function openSecondary(){home.classList.add("hidden");projectsView.classList.remove("hidden")}
-function goHome(){projectsView.classList.add("hidden");projectView.classList.add("hidden");home.classList.remove("hidden")}
-function backFromProject(){projectView.classList.add("hidden");mode==="secondary"?projectsView.classList.remove("hidden"):goHome()}
-
-/* SECONDARY */
 const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
 const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
 function renderSecondary(){
-  secondaryList.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
+  const list=document.getElementById("secondaryList");
+  list.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
   getSec().forEach(n=>{
-    const d=document.createElement("div");
-    d.className="card";d.textContent=n;
-    d.onclick=()=>openSecondaryProject(n);
-    secondaryList.appendChild(d);
+    const d=document.createElement("div"); d.className="card"; d.textContent=n;
+    d.onclick=()=>openSecondaryProject(n); list.appendChild(d);
   });
 }
 function addSecondary(){
-  const n=prompt("Назва проєкту");
-  if(!n)return;
-  const l=getSec();l.unshift(n);saveSec(l);renderSecondary();
+  const n=prompt("Назва проєкту"); if(!n)return;
+  const l=getSec(); l.unshift(n); saveSec(l); renderSecondary();
 }
-renderSecondary();
 
-/* PROJECT */
 let proj={run:false,t:0,s:0};
 const projectTimer=document.getElementById("projectTimer");
-
 function loadProj(){
-  const base = `proj_${mode}_${cur}`;
-
-  proj.t = +localStorage[base+"_total"] || 0;
-  proj.s = +localStorage[base+"_start"] || 0;
-  proj.run = !!proj.s;
-
-  projectTimer.classList.toggle("active", proj.run);
-  tickProj();
-  loadDays();
+  const base=`proj_${mode}_${cur}`;
+  proj.t=+localStorage[base+"_total"]||0; proj.s=+localStorage[base+"_start"]||0;
+  proj.run=!!proj.s; projectTimer.classList.toggle("active",proj.run);
+  tickProj(); loadDays();
 }
 function tickProj(){
-  const v = proj.run
-    ? proj.t + (Date.now() - proj.s)
-    : proj.t;
-
-  projectTimer.querySelector(".time").textContent = fmt(v);
-  requestAnimationFrame(tickProj);
+  const v=proj.run?proj.t+(Date.now()-proj.s):proj.t;
+  projectTimer.querySelector(".time").textContent=fmt(v);
+  if(!document.getElementById('projectView').classList.contains('hidden'))requestAnimationFrame(tickProj);
 }
-projectTimer.onclick = () => {
-  const base = `proj_${mode}_${cur}`;
-
-  if (proj.run) {
-    // STOP
-    const delta = Date.now() - proj.s;
-
-    proj.t += delta;
-    proj.s = 0;
-    proj.run = false;
-
-    // 🔥 ДОБАВЛЯЕМ В ДЕНЬ
-    const dayKey = k(mode === "main" ? "main" : "sec", cur);
-    localStorage[dayKey] =
-      (+(localStorage[dayKey] || 0)) + delta;
-
-    localStorage[base + "_start"] = 0;
-    localStorage[base + "_total"] = proj.t;
-
-    loadDays();
-    updateToday();
+projectTimer.onclick=()=>{
+  const base=`proj_${mode}_${cur}`;
+  if(proj.run){
+    const d=Date.now()-proj.s; proj.t+=d; proj.s=0; proj.run=false;
+    const key=k(mode==="main"?"main":"sec",cur);
+    localStorage[key]=(+(localStorage[key]||0))+d;
+    localStorage[base+"_start"]=0; localStorage[base+"_total"]=proj.t;
+    loadDays(); updateToday();
   } else {
-    // START
-    proj.s = Date.now();
-    proj.run = true;
-
-    localStorage[base + "_start"] = proj.s;
-    localStorage[base + "_total"] = proj.t;
+    proj.s=Date.now(); proj.run=true;
+    localStorage[base+"_start"]=proj.s; localStorage[base+"_total"]=proj.t;
   }
-
-  projectTimer.classList.toggle("active", proj.run);
+  projectTimer.classList.toggle("active",proj.run);
 };
-
-function adjustProject(d){saveProj(d)}
-function saveProj(d){
+function adjustProject(d){
   const key=k(mode==="main"?"main":"sec",cur);
   localStorage[key]=(+(localStorage[key]||0))+d;
-  proj.t=Math.max(0,proj.t+d);
-  tickProj();loadDays();updateToday();
+  proj.t=Math.max(0,proj.t+d); loadDays(); updateToday();
 }
-function openMainProject(n){mode="main";cur=n;home.classList.add("hidden");projectView.classList.remove("hidden");loadProj()}
-function openSecondaryProject(n){mode="secondary";cur=n;projectsView.classList.add("hidden");projectView.classList.remove("hidden");loadProj()}
+function openMainProject(n){mode="main";cur=n;showView('projectView');loadProj()}
+function openSecondaryProject(n){mode="secondary";cur=n;showView('projectView');loadProj()}
 
-/* DAYS */
+let pressTimer;
+function dayTouchStart(key, isTrash=false){ pressTimer=setTimeout(()=>isTrash?restoreDay(key):openEditDay(key),700); }
+function dayTouchEnd(){ clearTimeout(pressTimer); }
+
+function openEditDay(key){
+    editingKey=key;
+    document.getElementById('editDateLabel').textContent="Редагування: "+key.split('_')[2];
+    document.getElementById('editTimeInput').value=fmt(+localStorage[key]||0);
+    showView('editView');
+}
+function closeEdit(){showView('projectView')}
+function saveEdit(){
+    localStorage[editingKey]=parseFmt(document.getElementById('editTimeInput').value);
+    if(editingKey.endsWith(dayKey())){ proj.t=localStorage[editingKey]; localStorage[`proj_${mode}_${cur}_total`]=proj.t; }
+    loadDays(); updateToday(); closeEdit();
+}
+
+// LOGIC: TRASH
+function moveToTrash(){
+    const trashKey = "trash_" + editingKey;
+    localStorage[trashKey] = localStorage[editingKey];
+    localStorage.removeItem(editingKey);
+    if(editingKey.endsWith(dayKey())){ proj.t=0; localStorage[`proj_${mode}_${cur}_total`]=0; }
+    loadDays(); updateToday(); closeEdit();
+}
+
+function openTrash(){
+    showView('trashView');
+    renderTrash();
+}
+
+function renderTrash(){
+    const list=document.getElementById("trashList");
+    list.innerHTML="";
+    const prefix = "trash_" + (mode==="main"?"main_":"sec_") + cur + "_";
+    Object.keys(localStorage).filter(k=>k.startsWith(prefix)).sort().reverse().forEach(key=>{
+        const d=key.split("_")[3];
+        const row=document.createElement("div"); row.className="day";
+        row.innerHTML=`<span>${d}</span><span class="status-text">Затисніть щоб відновити</span><span>${fmt(+localStorage[key])}</span>`;
+        row.onmousedown=()=>dayTouchStart(key, true); row.onmouseup=dayTouchEnd;
+        row.ontouchstart=()=>dayTouchStart(key, true); row.ontouchend=dayTouchEnd;
+        list.appendChild(row);
+    });
+}
+
+function restoreDay(trashKey){
+    const originalKey = trashKey.replace("trash_", "");
+    localStorage[originalKey] = localStorage[trashKey];
+    localStorage.removeItem(trashKey);
+    if(originalKey.endsWith(dayKey())){ proj.t=+localStorage[originalKey]; localStorage[`proj_${mode}_${cur}_total`]=proj.t; }
+    renderTrash(); loadDays(); updateToday();
+    alert("Запис відновлено!");
+}
+
 function loadDays(){
-  daysList.innerHTML="";
-  Object.keys(localStorage)
-    .filter(k => k.startsWith((mode==="main" ? "main_" : "sec_") + cur + "_"))
-    .sort()
-    .reverse()
-    .forEach(k => {
-      const d = k.split("_")[2];
-      const D = new Date(d);
-
-      const row = document.createElement("div");
-      row.className = "day";
-      row.innerHTML =
-        `<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span>
-         <span>${fmt(+localStorage[k])}</span>`;
-
-      // ВЫДЕЛЕНИЕ СТРОКИ ПРИ КЛИКЕ
-      row.onclick = () => {
-        document.querySelectorAll(".day")
-          .forEach(x => x.classList.remove("active"));
-        row.classList.add("active");
-      };
-
-      daysList.appendChild(row);
-    });
+  const list=document.getElementById("daysList"); list.innerHTML="";
+  const prefix = (mode==="main"?"main_":"sec_") + cur + "_";
+  Object.keys(localStorage).filter(k=>k.startsWith(prefix)).sort().reverse().forEach(key=>{
+      const d=key.split("_")[2]; const D=new Date(d);
+      const row=document.createElement("div"); row.className="day";
+      row.innerHTML=`<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span><span style="color:var(--accent)">Редагувати</span><span>${fmt(+localStorage[key])}</span>`;
+      row.onmousedown=()=>dayTouchStart(key); row.onmouseup=dayTouchEnd;
+      row.ontouchstart=()=>dayTouchStart(key); row.ontouchend=dayTouchEnd;
+      list.appendChild(row);
+  });
 }
 
-/* CSV */
 function exportCSV(){
-  let c="";
-  Object.keys(localStorage).forEach(k=>c+=k+","+localStorage[k]+"\n");
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([c]));
-  a.download="work-time.csv";
-  a.click();
+  let c=""; Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c]));
+  a.download="work-time.csv"; a.click();
 }
-function importCSV(){fileInput.click()}
-fileInput.onchange=e=>{
-  const r=new FileReader();
-  r.onload=()=>{
-    r.result.split("\n").forEach(l=>{
-      const [k,v]=l.split(",");
-      if(k)localStorage[k]=v;
-    });
+function importCSV(){document.getElementById('fileInput').click()}
+document.getElementById('fileInput').onchange=e=>{
+  const r=new FileReader(); r.onload=()=>{
+    r.result.split("\n").forEach(l=>{ const [k,v]=l.split(","); if(k)localStorage[k]=v; });
     location.reload();
-  };
-  r.readAsText(e.target.files[0]);
+  }; r.readAsText(e.target.files[0]);
 };
 </script>
-
 </body>
 </html>
