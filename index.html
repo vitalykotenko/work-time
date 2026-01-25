@@ -470,12 +470,16 @@ function loadDays(){
 
       // ВЫДЕЛЕНИЕ СТРОКИ ПРИ КЛИКЕ
      let pressTimer;
+      let longPress = false;
 
 row.addEventListener("touchstart", (e) => {
-  e.preventDefault();      // 🔥 ВАЖНО
-  e.stopPropagation();     // 🔥 ВАЖНО
+  e.preventDefault();
+  e.stopPropagation();
+
+  longPress = false;
 
   pressTimer = setTimeout(() => {
+    longPress = true;
     selectedDayKey = k;
     openDayEditor();
   }, 500);
@@ -493,7 +497,12 @@ row.addEventListener("touchend", () => {
   clearTimeout(pressTimer);
 });
 
-row.onclick = () => {
+row.onclick = (e) => {
+  if (longPress) {
+    e.preventDefault();
+    return;
+  }
+
   document.querySelectorAll(".day")
     .forEach(x => x.classList.remove("active"));
   row.classList.add("active");
