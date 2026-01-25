@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Work Time</title>
+
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000">
+
 <style>
 :root{
 --bg:#000;
@@ -19,7 +21,7 @@
 --sub:#8E8E93;
 }
 
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+- {box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{
 margin:0;
 background:var(--bg);
@@ -41,7 +43,7 @@ padding:14px;
 text-align:center;
 color:var(--accent);
 font-size:16px;
-white-space:nowrap;
+white-space:nowrap; /* ВАЖНО — фикс переноса */
 }
 .btn:active,.adjust:active{transform:scale(.95)}
 .btn.disabled{opacity:.35;pointer-events:none}
@@ -184,14 +186,17 @@ color:#aaa;
 input[type=file]{display:none}
 </style>
 </head>
+
 <body>
 
+<!-- HOME -->
 <div id="home">
 <div class="top">
 <div class="btn" onclick="exportCSV()">Експорт CSV</div>
 <div class="btn" onclick="importCSV()">Імпорт CSV</div>
 <input type="file" id="fileInput">
 </div>
+
 <div class="projects">
 <div class="card project" onclick="openMainProject('Crypto')">
 <div class="name">Crypto</div>
@@ -202,27 +207,32 @@ input[type=file]{display:none}
 <div class="today" id="today_uapp">Сьогодні 00:00:00</div>
 </div>
 </div>
+
 <div class="assign">
 <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
 <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
 </div>
+
 <div class="timer-wrap">
 <div id="mainTimer" class="timer">
 <div class="wave"></div>
 <span class="time">00:00:00</span>
 </div>
 </div>
+
 <div class="time-adjust">
 <div class="adjust" onclick="adjustMain(-600000)">-10</div>
 <div class="adjust" onclick="adjustMain(-60000)">-1</div>
 <div class="adjust" onclick="adjustMain(60000)">+1</div>
 <div class="adjust" onclick="adjustMain(600000)">+10</div>
 </div>
+
 <div class="bottom">
 <div class="btn" onclick="openSecondary()">Проєкти</div>
 </div>
 </div>
 
+<!-- SECONDARY -->
 <div id="projectsView" class="hidden">
 <div class="header">
 <div class="btn" onclick="goHome()">← Назад</div>
@@ -232,6 +242,7 @@ input[type=file]{display:none}
 </div>
 </div>
 
+<!-- PROJECT -->
 <div id="projectView" class="hidden">
 <div class="header" style="display:flex;justify-content:space-between;gap:12px">
 <div class="btn" onclick="backFromProject()">← Назад</div>
@@ -253,7 +264,7 @@ input[type=file]{display:none}
 </div>
 
 <script>
-/* JS — исправленная версия */
+/* JS — стабильная версия */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
 const s=Math.floor(t/1000);
@@ -261,7 +272,7 @@ return String(Math.floor(s/3600)).padStart(2,"0")+":"+
 String(Math.floor(s%3600/60)).padStart(2,"0")+":"+
 String(s%60).padStart(2,"0");
 };
-const dayKey=()=>new Date().toISOString().slice(0,10);
+const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
 /* MAIN */
@@ -270,60 +281,86 @@ t: +localStorage.main_total || 0,
 s: +localStorage.main_start || 0,
 run: false
 };
+
 const mainTimer = document.getElementById("mainTimer");
+
+// восстановление состояния после reload
 if (main.s) {
 main.run = true;
 mainTimer.classList.add("active");
 }
+
 function tickMain(){
 const v = main.run
 ? main.t + (Date.now() - main.s)
 : main.t;
+
 mainTimer.querySelector(".time").textContent = fmt(v);
 updateAssign();
 requestAnimationFrame(tickMain);
 }
+
 mainTimer.onclick = () => {
 if (main.run) {
+// STOP
 main.t += Date.now() - main.s;
 main.s = 0;
 main.run = false;
+
+```
 localStorage.main_start = 0;
 localStorage.main_total = main.t;
 mainTimer.classList.remove("active");
+
+```
+
 } else {
+// START
 main.s = Date.now();
 main.run = true;
+
+```
 localStorage.main_start = main.s;
 localStorage.main_total = main.t;
 mainTimer.classList.add("active");
+
+```
+
 }
 };
+
 function adjustMain(d){
 main.t = Math.max(0, main.t + d);
 localStorage.main_total = main.t;
 }
+
 function assignMain(p){
 if (!main.t) return;
-const key = k("main", p);
-localStorage[key] = (+(localStorage[key] || 0)) + main.t;
+
+localStorage[k("main", p)] =
+(+(localStorage[k("main", p)] || 0)) + main.t;
+
 main = { t: 0, s: 0, run: false };
 localStorage.main_start = 0;
 localStorage.main_total = 0;
+
 mainTimer.classList.remove("active");
 updateToday();
 }
+
 function updateAssign(){
 const a = main.t > 0;
-document.getElementById("assignCrypto").classList.toggle("disabled", !a);
-document.getElementById("assignUapp").classList.toggle("disabled", !a);
+assignCrypto.classList.toggle("disabled", !a);
+assignUapp.classList.toggle("disabled", !a);
 }
+
 function updateToday(){
 ["Crypto","UAPP"].forEach(p=>{
-const element = document.getElementById("today_"+p.toLowerCase());
-if(element) element.textContent = "Сьогодні " + fmt(+localStorage[k("main",p)] || 0);
+document.getElementById("today_"+p.toLowerCase())
+.textContent = "Сьогодні " + fmt(+localStorage[k("main",p)] || 0);
 });
 }
+
 tickMain();
 updateToday();
 
@@ -333,7 +370,8 @@ let selectedDayKey = null;
 const home=document.getElementById("home");
 const projectsView=document.getElementById("projectsView");
 const projectView=document.getElementById("projectView");
-function openSecondary(){home.classList.add("hidden");projectsView.classList.remove("hidden");renderSecondary();}
+
+function openSecondary(){home.classList.add("hidden");projectsView.classList.remove("hidden")}
 function goHome(){projectsView.classList.add("hidden");projectView.classList.add("hidden");home.classList.remove("hidden")}
 function backFromProject(){projectView.classList.add("hidden");mode==="secondary"?projectsView.classList.remove("hidden"):goHome()}
 
@@ -341,11 +379,10 @@ function backFromProject(){projectView.classList.add("hidden");mode==="secondary
 const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
 const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
 function renderSecondary(){
-const secondaryList = document.getElementById("secondaryList");
 secondaryList.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
 getSec().forEach(n=>{
 const d=document.createElement("div");
-d.className="card"; d.style.marginTop="10px"; d.textContent=n;
+d.className="card";d.textContent=n;
 d.onclick=()=>openSecondaryProject(n);
 secondaryList.appendChild(d);
 });
@@ -360,11 +397,14 @@ renderSecondary();
 /* PROJECT */
 let proj={run:false,t:0,s:0};
 const projectTimer=document.getElementById("projectTimer");
+
 function loadProj(){
 const base = `proj_${mode}_${cur}`;
+
 proj.t = +localStorage[base+"_total"] || 0;
 proj.s = +localStorage[base+"_start"] || 0;
 proj.run = !!proj.s;
+
 projectTimer.classList.toggle("active", proj.run);
 tickProj();
 loadDays();
@@ -373,172 +413,271 @@ function tickProj(){
 const v = proj.run
 ? proj.t + (Date.now() - proj.s)
 : proj.t;
+
 projectTimer.querySelector(".time").textContent = fmt(v);
-if(!projectView.classList.contains("hidden")) requestAnimationFrame(tickProj);
+requestAnimationFrame(tickProj);
 }
 projectTimer.onclick = () => {
 const base = `proj_${mode}_${cur}`;
+
 if (proj.run) {
+// STOP
 const delta = Date.now() - proj.s;
+
+```
 proj.t += delta;
 proj.s = 0;
 proj.run = false;
-const dayK = k(mode === "main" ? "main" : "sec", cur);
-localStorage[dayK] = (+(localStorage[dayK] || 0)) + delta;
+
+// 🔥 ДОБАВЛЯЕМ В ДЕНЬ
+const dayKey = k(mode === "main" ? "main" : "sec", cur);
+localStorage[dayKey] =
+  (+(localStorage[dayKey] || 0)) + delta;
+
 localStorage[base + "_start"] = 0;
 localStorage[base + "_total"] = proj.t;
+
 loadDays();
 updateToday();
+
+```
+
 } else {
+// START
 proj.s = Date.now();
 proj.run = true;
+
+```
 localStorage[base + "_start"] = proj.s;
 localStorage[base + "_total"] = proj.t;
+
+```
+
 }
+
 projectTimer.classList.toggle("active", proj.run);
 };
-function adjustProject(d){
+function adjustProject(d){saveProj(d)}
+function saveProj(d){
 const key=k(mode==="main"?"main":"sec",cur);
 localStorage[key]=(+(localStorage[key]||0))+d;
 proj.t=Math.max(0,proj.t+d);
-loadDays();updateToday();
+tickProj();loadDays();updateToday();
 }
 function openMainProject(n){mode="main";cur=n;home.classList.add("hidden");projectView.classList.remove("hidden");loadProj()}
 function openSecondaryProject(n){mode="secondary";cur=n;projectsView.classList.add("hidden");projectView.classList.remove("hidden");loadProj()}
 
 /* DAYS */
 function loadDays(){
-const list = document.getElementById("daysList");
-list.innerHTML="";
-const prefix = (mode==="main" ? "main_" : "sec_") + cur + "";
+daysList.innerHTML="";
 Object.keys(localStorage)
-.filter(key => key.startsWith("day_" + prefix))
+.filter(k => k.startsWith((mode==="main" ? "main_" : "sec_") + cur + "*"))
 .sort()
 .reverse()
-.forEach(key => {
-const d = key.split("_").pop();
+.forEach(k => {
+const d = k.split("*")[2];
 const D = new Date(d);
-const row = document.createElement("div");
-row.className = "day";
-row.innerHTML = `<span>${d} ${daysUA[D.getDay()]}</span><span>${fmt(+localStorage[key])}</span>`;
 
-let pressTimer;
+```
+  const row = document.createElement("div");
+  row.className = "day";
+  row.innerHTML =
+    `<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span>
+     <span>${fmt(+localStorage[k])}</span>`;
+
+  // ВЫДЕЛЕНИЕ СТРОКИ ПРИ КЛИКЕ
+ let pressTimer;
+  let longPress = false;
+
+```
+
 row.addEventListener("touchstart", () => {
+longPress = false;
+
 pressTimer = setTimeout(() => {
-selectedDayKey = key;
+longPress = true;
+selectedDayKey = k;
 openDayEditor();
-}, 600);
+}, 500);
 });
-row.addEventListener("touchend", () => clearTimeout(pressTimer));
+
+row.addEventListener("touchend", () => {
+clearTimeout(pressTimer);
+});
+
+row.addEventListener("touchcancel", () => {
+clearTimeout(pressTimer);
+});
+
 row.onclick = () => {
-document.querySelectorAll(".day").forEach(x => x.classList.remove("active"));
+if (longPress) return;
+
+document.querySelectorAll(".day")
+.forEach(x => x.classList.remove("active"));
 row.classList.add("active");
 };
-list.appendChild(row);
+
+```
+  daysList.appendChild(row);
 });
+
+```
+
 }
 
 /* CSV */
 function exportCSV(){
-let c="Key,Value\n";
-Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
+let c="";
+Object.keys(localStorage).forEach(k=>c+=k+","+localStorage[k]+"\n");
 const a=document.createElement("a");
 a.href=URL.createObjectURL(new Blob([c]));
 a.download="work-time.csv";
 a.click();
 }
-function importCSV(){document.getElementById("fileInput").click()}
-document.getElementById("fileInput").onchange=e=>{
+function importCSV(){fileInput.click()}
+fileInput.onchange=e=>{
 const r=new FileReader();
 r.onload=()=>{
 r.result.split("\n").forEach(l=>{
 const [k,v]=l.split(",");
-if(k && v)localStorage[k]=v;
+if(k)localStorage[k]=v;
 });
 location.reload();
 };
 r.readAsText(e.target.files[0]);
 };
-
-/* DAY EDIT */
+/* DAY EDIT LOGIC */
 const dayEditView = document.getElementById("dayEditView");
+
 function openDayEditor(){
 projectView.classList.add("hidden");
 dayEditView.classList.remove("hidden");
-document.getElementById("dayTimeInput").value = fmt(+localStorage[selectedDayKey] || 0);
+
+const val = +localStorage[selectedDayKey] || 0;
+document.getElementById("dayTimeInput").value = fmt(val);
 }
+
 function closeDayEditor(){
 dayEditView.classList.add("hidden");
 projectView.classList.remove("hidden");
 }
+
 function saveDayEdit(){
-const p = document.getElementById("dayTimeInput").value.split(":").map(Number);
-if(p.length === 3) {
-localStorage[selectedDayKey] = ((p[0]*3600)+(p[1]*60)+p[2]) * 1000;
-closeDayEditor(); loadDays(); updateToday();
-}
-}
-function deleteDay(){
-const trash = JSON.parse(localStorage.deletedDays || "[]");
-trash.push({key: selectedDayKey, value: localStorage[selectedDayKey]});
-localStorage.deletedDays = JSON.stringify(trash);
-delete localStorage[selectedDayKey];
-closeDayEditor(); loadDays(); updateToday();
+const v = document.getElementById("dayTimeInput").value.trim();
+const p = v.split(":").map(Number);
+if(p.length !== 3) return;
+
+const ms = ((p[0]*3600)+(p[1]*60)+p[2]) * 1000;
+localStorage[selectedDayKey] = ms;
+
+closeDayEditor();
+loadDays();
+updateToday();
 }
 
-/* TRASH */
+function deleteDay(){
+const trash = JSON.parse(localStorage.deletedDays || "[]");
+trash.push({
+key: selectedDayKey,
+value: localStorage[selectedDayKey],
+deletedAt: Date.now()
+});
+localStorage.deletedDays = JSON.stringify(trash);
+
+delete localStorage[selectedDayKey];
+
+closeDayEditor();
+loadDays();
+updateToday();
+}
+
+/* TRASH LOGIC */
 const trashView = document.getElementById("trashView");
+const trashList = document.getElementById("trashList");
+
 function openTrash(){
 projectView.classList.add("hidden");
 trashView.classList.remove("hidden");
 renderTrash();
 }
+
 function closeTrash(){
 trashView.classList.add("hidden");
 projectView.classList.remove("hidden");
 }
+
 function renderTrash(){
-const list = document.getElementById("trashList");
-list.innerHTML = "";
+trashList.innerHTML = "";
+
 const trash = JSON.parse(localStorage.deletedDays || "[]");
+
 if(!trash.length){
-list.innerHTML = '<div class="day" style="opacity:.5">Порожньо</div>';
+trashList.innerHTML =
+'<div class="day" style="opacity:.5">Порожньо</div>';
 return;
 }
-trash.slice().reverse().forEach((item, i) => {
+
+trash
+.slice()
+.reverse()
+.forEach((item, i) => {
 const d = document.createElement("div");
 d.className = "day";
-d.innerHTML = `<span>${item.key}</span><span>${fmt(+item.value)}</span>`;
-d.onclick = () => {
-localStorage[item.key] = item.value;
-trash.splice(trash.length - 1 - i, 1);
-localStorage.deletedDays = JSON.stringify(trash);
-renderTrash(); loadDays();
-};
-list.appendChild(d);
+d.innerHTML =         `<span>${item.key.split("_")[2]}</span>         <span>${fmt(+item.value || 0)}</span>`      ;
+d.onclick = () => restoreFromTrash(i);
+trashList.appendChild(d);
 });
 }
+
+function restoreFromTrash(index){
+const trash = JSON.parse(localStorage.deletedDays || "[]");
+const item = trash.splice(trash.length - 1 - index, 1)[0];
+
+localStorage[item.key] = item.value;
+localStorage.deletedDays = JSON.stringify(trash);
+
+renderTrash();
+loadDays();
+updateToday();
+}
+
 </script>
 
+<!-- DAY EDIT -->
 <div id="dayEditView" class="hidden">
 <div class="header">
 <div class="btn" onclick="closeDayEditor()">← Назад</div>
 </div>
+
 <div class="card" style="margin:14px">
 <div style="margin-bottom:10px;color:var(--sub)">Час за день</div>
-<input id="dayTimeInput" style="width:100%;padding:14px;border-radius:14px;background:#000;color:#fff;border:1px solid var(--stroke);font-size:18px">
+<input id="dayTimeInput"
+style="
+width:100%;
+padding:14px;
+border-radius:14px;
+background:#000;
+color:#fff;
+border:1px solid var(--stroke);
+font-size:18px
+"
+placeholder="00:00:00">
 </div>
+
 <div class="bottom">
 <div class="btn" onclick="saveDayEdit()">Зберегти</div>
-<div class="btn" style="color:#ff453a;margin-top:10px" onclick="deleteDay()">Видалити</div>
+<div class="btn" style="color:#ff453a" onclick="deleteDay()">Видалити</div>
 </div>
 </div>
 
+<!-- TRASH -->
 <div id="trashView" class="hidden">
 <div class="header">
 <div class="btn" onclick="closeTrash()">← Назад</div>
 </div>
+
 <div class="days" id="trashList"></div>
 </div>
+
 </body>
 </html>
