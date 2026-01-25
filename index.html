@@ -12,11 +12,9 @@
 <style>
 :root {
   --bg:#000;
-  --card:rgba(28,28,30,.75);
+  --card:#1c1c1e;
   --stroke:rgba(255,255,255,.18);
   --accent:#0A84FF;
-  --text:#fff;
-  --radius:20px;
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -24,61 +22,60 @@
 body{
   margin:0;
   background:var(--bg);
-  color:var(--text);
+  color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
 }
 
-/* ===== COMMON ===== */
-.hidden{display:none}
-.row{display:flex;gap:12px}
-.center{display:flex;justify-content:center}
-
-/* ===== CARD ===== */
-.card{
+/* buttons */
+.btn{
+  padding:14px;
+  border-radius:18px;
   background:var(--card);
-  border-radius:var(--radius);
   border:1px solid var(--stroke);
-  backdrop-filter:blur(24px);
-  padding:16px;
+  color:var(--accent);
   text-align:center;
+  font-size:16px;
   white-space:nowrap;
 }
-.card:active{transform:scale(.97)}
+.btn:active{transform:scale(.97)}
 
-/* ===== TOP ===== */
+/* top */
 .top{
-  padding:14px 16px;
-}
-.top .row .card{
-  flex:1;
-  color:var(--accent);
-  font-weight:500;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:14px;
 }
 
-/* ===== PROJECTS ===== */
+/* projects */
 .projects{
-  padding:12px 16px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  padding:6px 14px 0;
 }
-.projects .row .card{
-  flex:1;
-  font-size:18px;
+.project{
   padding:22px 0;
+  text-align:center;
+  border-radius:22px;
+  background:var(--card);
+  border:1px solid var(--stroke);
+  font-size:18px;
 }
 
-/* ===== ASSIGN ===== */
+/* assign */
 .assign{
-  padding:0 16px 10px;
-}
-.assign .row .card{
-  flex:1;
-  color:var(--accent);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:14px;
 }
 
-/* ===== TIMER ===== */
+/* timer */
 .timer-wrap{
-  margin:40px 0 60px;
   display:flex;
   justify-content:center;
+  margin-top:20px;
 }
 .timer{
   width:260px;
@@ -88,102 +85,52 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:42px;
-  font-weight:600;
+  font-size:40px;
 }
 .timer.active{
   border-color:var(--accent);
-  box-shadow:0 0 0 1px rgba(10,132,255,.4);
 }
 
-/* ===== SCREENS ===== */
-.screen{
-  min-height:100vh;
-}
-
-/* ===== DYNAMIC ===== */
-.dynamic-list{
-  padding:16px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-.add{
-  background:rgba(255,255,255,.12);
-  color:#aaa;
-  font-size:22px;
-}
-.back{
-  color:var(--accent);
-}
+input[type=file]{display:none}
 </style>
 </head>
 
 <body>
 
-<!-- ================= HOME ================= -->
-<div id="home" class="screen">
-
-  <div class="top">
-    <div class="row">
-      <div class="card" onclick="exportCSV()">Експорт CSV</div>
-      <div class="card" onclick="importCSV()">Імпорт CSV</div>
-      <input type="file" id="fileInput" hidden>
-    </div>
-  </div>
-
-  <div class="projects">
-    <div class="row">
-      <div class="card">Crypto</div>
-      <div class="card">UAPP</div>
-    </div>
-  </div>
-
-  <div class="assign">
-    <div class="row">
-      <div class="card">Зачислити в Crypto</div>
-      <div class="card">Зачислити в UAPP</div>
-    </div>
-  </div>
-
-  <div class="timer-wrap">
-    <div id="mainTimer" class="timer">00:00:00</div>
-  </div>
-
+<div class="top">
+  <div class="btn" id="exportCSV">Експорт CSV</div>
+  <div class="btn" id="importCSV">Імпорт CSV</div>
+  <input type="file" id="fileInput" accept=".csv">
 </div>
 
-<!-- ================= DYNAMIC PROJECTS ================= -->
-<div id="dynamic" class="screen hidden">
-
-  <div class="top">
-    <div class="card back" onclick="goHome()">← Назад</div>
-  </div>
-
-  <div class="dynamic-list" id="dynamicList">
-    <div class="card add" onclick="addProject()">＋</div>
-  </div>
-
+<div class="projects">
+  <div class="project">Crypto</div>
+  <div class="project">UAPP</div>
 </div>
 
-<!-- ================= PROJECT ================= -->
-<div id="project" class="screen hidden">
+<div class="assign">
+  <div class="btn">Зачислити в Crypto</div>
+  <div class="btn">Зачислити в UAPP</div>
+</div>
 
-  <div class="top">
-    <div class="card back" onclick="backToDynamic()">← Назад</div>
-  </div>
-
-  <div class="timer-wrap">
-    <div id="projectTimer" class="timer">00:00:00</div>
-  </div>
-
+<div class="timer-wrap">
+  <div id="timer" class="timer">00:00:00</div>
 </div>
 
 <script>
-/* ===== STATE ===== */
-let running=false,start=0,elapsed=0,raf;
-let currentProject=null;
+/* ===== TIMER STATE ===== */
+const STORAGE = "main_timer_state";
 
-/* ===== TIMER CORE ===== */
+let state = JSON.parse(localStorage.getItem(STORAGE)) || {
+  running:false,
+  elapsed:0,
+  startedAt:0
+};
+
+let raf;
+const timer = document.getElementById("timer");
+
+/* ===== FORMAT ===== */
 function fmt(ms){
   const s=Math.floor(ms/1000);
   return [
@@ -193,92 +140,65 @@ function fmt(ms){
   ].join(":");
 }
 
-function run(timerEl){
-  const now=running?elapsed+(Date.now()-start):elapsed;
-  timerEl.textContent=fmt(now);
-  if(running)raf=requestAnimationFrame(()=>run(timerEl));
+/* ===== SAVE ===== */
+function save(){
+  localStorage.setItem(STORAGE,JSON.stringify(state));
 }
 
-function toggle(timerEl){
-  running=!running;
-  timerEl.classList.toggle("active",running);
-  if(running){start=Date.now();run(timerEl);}
-  else{elapsed+=Date.now()-start;cancelAnimationFrame(raf);}
+/* ===== RENDER ===== */
+function render(){
+  const now = state.running
+    ? state.elapsed + (Date.now()-state.startedAt)
+    : state.elapsed;
+
+  timer.textContent = fmt(now);
+  if(state.running) raf=requestAnimationFrame(render);
 }
 
-/* ===== MAIN TIMER ===== */
-const mainTimer=document.getElementById("mainTimer");
-mainTimer.onclick=()=>toggle(mainTimer);
+/* ===== TOGGLE ===== */
+timer.onclick = () => {
+  state.running=!state.running;
+  timer.classList.toggle("active",state.running);
 
-/* ===== PROJECT TIMER ===== */
-const projectTimer=document.getElementById("projectTimer");
-projectTimer.onclick=()=>toggle(projectTimer);
+  if(state.running){
+    state.startedAt=Date.now();
+    render();
+  }else{
+    state.elapsed+=Date.now()-state.startedAt;
+    state.startedAt=0;
+    cancelAnimationFrame(raf);
+  }
+  save();
+};
 
-/* ===== NAV ===== */
-function openDynamic(){
-  home.classList.add("hidden");
-  dynamic.classList.remove("hidden");
-}
-function goHome(){
-  dynamic.classList.add("hidden");
-  home.classList.remove("hidden");
-}
-function openProject(name){
-  currentProject=name;
-  dynamic.classList.add("hidden");
-  project.classList.remove("hidden");
-}
-function backToDynamic(){
-  project.classList.add("hidden");
-  dynamic.classList.remove("hidden");
-}
-
-/* ===== DYNAMIC PROJECTS ===== */
-function addProject(){
-  const name=prompt("Назва проєкту");
-  if(!name)return;
-  const d=document.createElement("div");
-  d.className="card";
-  d.textContent=name;
-  d.onclick=()=>openProject(name);
-  dynamicList.appendChild(d);
-}
+/* ===== INIT ===== */
+timer.classList.toggle("active",state.running);
+render();
 
 /* ===== CSV ===== */
-function exportCSV(){
-  let csv="project,ms\n";
-  Object.keys(localStorage).forEach(k=>{
-    csv+=`${k},${localStorage[k]}\n`;
-  });
+exportCSV.onclick=()=>{
+  let csv="elapsed_ms\n"+state.elapsed;
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
   a.download="work-time.csv";
   a.click();
-}
-function importCSV(){
-  fileInput.click();
-}
-fileInput.onchange=e=>{
-  const r=new FileReader();
-  r.onload=()=>alert("Імпортовано");
-  r.readAsText(e.target.files[0]);
 };
 
-/* ===== SWIPE ===== */
-let sx=0,sy=0;
-document.addEventListener("touchstart",e=>{
-  sx=e.touches[0].clientX;
-  sy=e.touches[0].clientY;
-},{passive:true});
-
-document.addEventListener("touchend",e=>{
-  const dx=e.changedTouches[0].clientX-sx;
-  const dy=e.changedTouches[0].clientY-sy;
-  if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy))return;
-
-  if(dx<0 && !home.classList.contains("hidden"))openDynamic();
-  if(dx>0 && !dynamic.classList.contains("hidden"))goHome();
-});
+importCSV.onclick=()=>fileInput.click();
+fileInput.onchange=e=>{
+  const r=new FileReader();
+  r.onload=()=>{
+    const v=Number(r.result.split("\n")[1]);
+    if(!isNaN(v)){
+      state.elapsed=v;
+      state.running=false;
+      state.startedAt=0;
+      save();
+      render();
+    }
+  };
+  r.readAsText(e.target.files[0]);
+};
 </script>
 
 </body>
