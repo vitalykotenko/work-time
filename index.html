@@ -43,14 +43,116 @@ body{
   text-align:center;
   color:var(--accent);
   font-size:16px;
-  white-space:nowrap;
+  white-space:nowrap; /* ВАЖНО — фикс переноса */
 }
 .btn:active,.adjust:active{transform:scale(.95)}
 .btn.disabled{opacity:.35;pointer-events:none}
 .card{padding:18px}
 
+/* TOP */
+.top{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:14px;
+}
+
+/* HOME PROJECTS */
+.projects{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  padding:6px 14px;
+}
+.project .name{font-size:18px}
+.project .today{
+  margin-top:6px;
+  font-size:13px;
+  color:var(--sub);
+}
+
+/* ASSIGN */
+.assign{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:14px;
+}
+
+/* TIMER */
+.timer-wrap{
+  display:flex;
+  justify-content:center;
+  margin:30px 0 16px;
+}
+.timer{
+  width:260px;
+  height:260px;
+  border-radius:50%;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:40px;
+  font-weight:600;
+}
+.timer.active{
+  background:rgba(10,132,255,.25);
+  border-color:rgba(10,132,255,.55);
+  box-shadow:0 0 40px rgba(10,132,255,.35);
+}
+.timer .time{z-index:2}
+
+/* WAVE */
+.wave{
+  position:absolute;
+  left:-50%;
+  top:0;
+  width:200%;
+  height:200%;
+  background:linear-gradient(
+    90deg,
+    rgba(10,132,255,.35),
+    rgba(10,132,255,.15),
+    rgba(10,132,255,.35)
+  );
+  border-radius:45%;
+  opacity:0;
+}
+.timer.active .wave{
+  opacity:1;
+  animation:wave 8s linear infinite;
+}
+@keyframes wave{
+  from{transform:translateX(-25%) rotate(0deg)}
+  to{transform:translateX(25%) rotate(360deg)}
+}
+
+/* TIME ADJUST */
+.time-adjust{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin:12px 0 18px;
+}
+.adjust{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--accent);
+  font-size:15px;
+}
+
 /* DAYS */
-.days{padding:14px;display:grid;gap:10px}
+.days{
+  padding:14px;
+  display:grid;
+  gap:10px;
+}
 .day{
   display:flex;
   justify-content:space-between;
@@ -61,16 +163,107 @@ body{
   background:rgba(10,132,255,.18);
   border-color:rgba(10,132,255,.55);
 }
+
+/* HEADER */
+.header{padding:14px}
+
+/* SECONDARY */
+.secondary-list{
+  padding:14px;
+  display:grid;
+  gap:14px;
+}
+.plus{
+  background:var(--glass-light);
+  font-size:28px;
+  text-align:center;
+  padding:22px 0;
+  color:#aaa;
+}
+
+/* BOTTOM */
+.bottom{padding:14px}
+input[type=file]{display:none}
 </style>
 </head>
 
 <body>
 
-<div id="projectView">
+<!-- HOME -->
+<div id="home">
+  <div class="top">
+    <div class="btn" onclick="exportCSV()">Експорт CSV</div>
+    <div class="btn" onclick="importCSV()">Імпорт CSV</div>
+    <input type="file" id="fileInput">
+  </div>
+
+  <div class="projects">
+    <div class="card project" onclick="openMainProject('Crypto')">
+      <div class="name">Crypto</div>
+      <div class="today" id="today_crypto">Сьогодні 00:00:00</div>
+    </div>
+    <div class="card project" onclick="openMainProject('UAPP')">
+      <div class="name">UAPP</div>
+      <div class="today" id="today_uapp">Сьогодні 00:00:00</div>
+    </div>
+  </div>
+
+  <div class="assign">
+    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
+    <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
+  </div>
+
+  <div class="timer-wrap">
+    <div id="mainTimer" class="timer">
+      <div class="wave"></div>
+      <span class="time">00:00:00</span>
+    </div>
+  </div>
+
+  <div class="time-adjust">
+    <div class="adjust" onclick="adjustMain(-600000)">-10</div>
+    <div class="adjust" onclick="adjustMain(-60000)">-1</div>
+    <div class="adjust" onclick="adjustMain(60000)">+1</div>
+    <div class="adjust" onclick="adjustMain(600000)">+10</div>
+  </div>
+
+  <div class="bottom">
+    <div class="btn" onclick="openSecondary()">Проєкти</div>
+  </div>
+</div>
+
+<!-- SECONDARY -->
+<div id="projectsView" class="hidden">
+  <div class="header">
+    <div class="btn" onclick="goHome()">← Назад</div>
+  </div>
+  <div class="secondary-list" id="secondaryList">
+    <div class="card plus" onclick="addSecondary()">＋</div>
+  </div>
+</div>
+
+<!-- PROJECT -->
+<div id="projectView" class="hidden">
+  <div class="header">
+    <div class="btn" onclick="backFromProject()">← Назад</div>
+  </div>
+  <div class="timer-wrap">
+    <div id="projectTimer" class="timer">
+      <div class="wave"></div>
+      <span class="time">00:00:00</span>
+    </div>
+  </div>
+  <div class="time-adjust">
+    <div class="adjust" onclick="adjustProject(-600000)">-10</div>
+    <div class="adjust" onclick="adjustProject(-60000)">-1</div>
+    <div class="adjust" onclick="adjustProject(60000)">+1</div>
+    <div class="adjust" onclick="adjustProject(600000)">+10</div>
+  </div>
   <div class="days" id="daysList"></div>
 </div>
 
 <script>
+/* JS — стабильная версия */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
   const s=Math.floor(t/1000);
@@ -78,31 +271,143 @@ const fmt=t=>{
          String(Math.floor(s%3600/60)).padStart(2,"0")+":"+
          String(s%60).padStart(2,"0");
 };
+const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
+const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
-/* DAYS — ИСПРАВЛЕНО */
+/* MAIN */
+let main={run:false,t:0,s:0};
+const mainTimer=document.getElementById("mainTimer");
+
+function tickMain(){
+  const v=main.run?main.t+(Date.now()-main.s):main.t;
+  mainTimer.querySelector(".time").textContent=fmt(v);
+  updateAssign();
+  if(main.run)requestAnimationFrame(tickMain);
+}
+mainTimer.onclick=()=>{
+  main.run=!main.run;
+  mainTimer.classList.toggle("active",main.run);
+  if(main.run){main.s=Date.now();tickMain()}
+  else main.t+=Date.now()-main.s;
+};
+function adjustMain(d){main.t=Math.max(0,main.t+d);tickMain()}
+function assignMain(p){
+  if(!main.t)return;
+  localStorage[k("main",p)]=(+(localStorage[k("main",p)]||0))+main.t;
+  main={run:false,t:0,s:0};
+  mainTimer.classList.remove("active");
+  tickMain();updateToday();
+}
+function updateAssign(){
+  const a=main.t>0;
+  assignCrypto.classList.toggle("disabled",!a);
+  assignUapp.classList.toggle("disabled",!a);
+}
+function updateToday(){
+  ["Crypto","UAPP"].forEach(p=>{
+    document.getElementById("today_"+p.toLowerCase())
+      .textContent="Сьогодні "+fmt(+localStorage[k("main",p)]||0);
+  });
+}
+tickMain();updateToday();
+
+/* NAV */
+let mode=null,cur=null;
+const home=document.getElementById("home");
+const projectsView=document.getElementById("projectsView");
+const projectView=document.getElementById("projectView");
+
+function openSecondary(){home.classList.add("hidden");projectsView.classList.remove("hidden")}
+function goHome(){projectsView.classList.add("hidden");projectView.classList.add("hidden");home.classList.remove("hidden")}
+function backFromProject(){projectView.classList.add("hidden");mode==="secondary"?projectsView.classList.remove("hidden"):goHome()}
+
+/* SECONDARY */
+const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
+const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
+function renderSecondary(){
+  secondaryList.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
+  getSec().forEach(n=>{
+    const d=document.createElement("div");
+    d.className="card";d.textContent=n;
+    d.onclick=()=>openSecondaryProject(n);
+    secondaryList.appendChild(d);
+  });
+}
+function addSecondary(){
+  const n=prompt("Назва проєкту");
+  if(!n)return;
+  const l=getSec();l.unshift(n);saveSec(l);renderSecondary();
+}
+renderSecondary();
+
+/* PROJECT */
+let proj={run:false,t:0,s:0};
+const projectTimer=document.getElementById("projectTimer");
+
+function loadProj(){
+  proj.t=+localStorage[k(mode==="main"?"main":"sec",cur)]||0;
+  proj.run=false;
+  projectTimer.classList.remove("active");
+  tickProj();loadDays();
+}
+function tickProj(){
+  const v=proj.run?proj.t+(Date.now()-proj.s):proj.t;
+  projectTimer.querySelector(".time").textContent=fmt(v);
+  if(proj.run)requestAnimationFrame(tickProj);
+}
+projectTimer.onclick=()=>{
+  proj.run=!proj.run;
+  projectTimer.classList.toggle("active",proj.run);
+  if(proj.run){proj.s=Date.now();tickProj()}
+  else saveProj(Date.now()-proj.s);
+};
+function adjustProject(d){saveProj(d)}
+function saveProj(d){
+  const key=k(mode==="main"?"main":"sec",cur);
+  localStorage[key]=(+(localStorage[key]||0))+d;
+  proj.t=Math.max(0,proj.t+d);
+  tickProj();loadDays();updateToday();
+}
+function openMainProject(n){mode="main";cur=n;home.classList.add("hidden");projectView.classList.remove("hidden");loadProj()}
+function openSecondaryProject(n){mode="secondary";cur=n;projectsView.classList.add("hidden");projectView.classList.remove("hidden");loadProj()}
+
+/* DAYS */
 function loadDays(){
   daysList.innerHTML="";
   Object.keys(localStorage)
-    .filter(k=>k.startsWith("main_")||k.startsWith("sec_"))
+    .filter(k=>k.startsWith((mode==="main"?"main_":"sec_")+cur+"_"))
     .sort().reverse()
     .forEach(k=>{
       const d=k.split("_")[2];
       const D=new Date(d);
       const row=document.createElement("div");
       row.className="day";
-      row.innerHTML=`
-        <span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span>
-        <span>${fmt(+localStorage[k])}</span>
-      `;
-      row.onclick=()=>{
-        document.querySelectorAll(".day").forEach(x=>x.classList.remove("active"));
-        row.classList.add("active");
-      };
+      row.innerHTML=`<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span><span>${fmt(+localStorage[k])}</span>`;
       daysList.appendChild(row);
     });
 }
 
-loadDays();
+/* CSV */
+function exportCSV(){
+  let c="";
+  Object.keys(localStorage).forEach(k=>c+=k+","+localStorage[k]+"\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([c]));
+  a.download="work-time.csv";
+  a.click();
+}
+function importCSV(){fileInput.click()}
+fileInput.onchange=e=>{
+  const r=new FileReader();
+  r.onload=()=>{
+    r.result.split("\n").forEach(l=>{
+      const [k,v]=l.split(",");
+      if(k)localStorage[k]=v;
+    });
+    location.reload();
+  };
+  r.readAsText(e.target.files[0]);
+};
 </script>
 
 </body>
