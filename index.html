@@ -13,12 +13,13 @@
 :root {
   --bg: #000;
   --card: rgba(28,28,30,0.78);
-  --card-solid: #1c1c1e;
   --accent: #0A84FF;
-  --accent-soft: #1C3A5E;
+  --accent-soft: rgba(10,132,255,0.25);
   --text: #fff;
-  --subtext: #8E8E93;
   --radius: 18px;
+
+  --ios-stroke: rgba(255,255,255,0.18);
+  --ios-stroke-soft: rgba(255,255,255,0.08);
 }
 
 * {
@@ -31,6 +32,24 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, system-ui;
+}
+
+/* ===== iOS 26 CARD STROKE ===== */
+.ios-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.ios-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1px solid var(--ios-stroke-soft);
+  box-shadow:
+    inset 0 0 0 0.5px var(--ios-stroke),
+    0 0 0.5px rgba(255,255,255,0.12);
 }
 
 /* ===== TOP BAR ===== */
@@ -56,12 +75,12 @@ body {
   color: var(--accent);
   font-size: 15px;
   font-weight: 500;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: transform 0.12s ease, background 0.15s ease;
 }
 
 .btn:active {
-  background: rgba(44,44,46,0.9);
   transform: scale(0.97);
+  background: rgba(44,44,46,0.9);
 }
 
 /* ===== PROJECTS ===== */
@@ -114,11 +133,18 @@ body {
   font-size: 40px;
   font-weight: 600;
   letter-spacing: 1px;
-  transition: background 0.25s ease, transform 0.15s ease;
+  transition: transform 0.15s ease, background 0.25s ease;
 }
 
 .timer.active {
   background: var(--accent-soft);
+}
+
+.timer.active::after {
+  border-color: rgba(10,132,255,0.55);
+  box-shadow:
+    inset 0 0 0 1px rgba(10,132,255,0.45),
+    0 0 18px rgba(10,132,255,0.35);
 }
 
 .timer:active {
@@ -132,26 +158,26 @@ input[type="file"] { display: none; }
 
 <!-- TOP -->
 <div class="top">
-  <div class="btn" id="exportCSV">Експорт CSV</div>
-  <div class="btn" id="importCSV">Імпорт CSV</div>
+  <div class="btn ios-card" id="exportCSV">Експорт CSV</div>
+  <div class="btn ios-card" id="importCSV">Імпорт CSV</div>
   <input type="file" id="fileInput" accept=".csv">
 </div>
 
 <!-- PROJECTS -->
 <div class="projects">
-  <div class="project" onclick="openProject('crypto')">Crypto</div>
-  <div class="project" onclick="openProject('uapp')">UAPP</div>
+  <div class="project ios-card" onclick="openProject('crypto')">Crypto</div>
+  <div class="project ios-card" onclick="openProject('uapp')">UAPP</div>
 </div>
 
 <!-- ASSIGN -->
 <div class="assign">
-  <div class="btn" onclick="assignTime('crypto')">Зачислити в Crypto</div>
-  <div class="btn" onclick="assignTime('uapp')">Зачислити в UAPP</div>
+  <div class="btn ios-card" onclick="assignTime('crypto')">Зачислити в Crypto</div>
+  <div class="btn ios-card" onclick="assignTime('uapp')">Зачислити в UAPP</div>
 </div>
 
 <!-- TIMER -->
 <div class="timer-wrap">
-  <div id="timer" class="timer">00:00:00</div>
+  <div id="timer" class="timer ios-card">00:00:00</div>
 </div>
 
 <script>
