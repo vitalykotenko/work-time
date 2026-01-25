@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#000000">
 
 <style>
-:root {
+:root{
   --bg:#000;
   --card:#1c1c1e;
   --stroke:rgba(255,255,255,.18);
@@ -26,7 +26,8 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
 }
 
-/* buttons */
+/* ===== COMMON ===== */
+.hidden{display:none}
 .btn{
   padding:14px;
   border-radius:18px;
@@ -39,7 +40,14 @@ body{
 }
 .btn:active{transform:scale(.97)}
 
-/* top */
+.card{
+  background:var(--card);
+  border:1px solid var(--stroke);
+  border-radius:22px;
+  text-align:center;
+}
+
+/* ===== TOP ===== */
 .top{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -47,23 +55,19 @@ body{
   padding:14px;
 }
 
-/* projects */
+/* ===== PROJECTS ===== */
 .projects{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:14px;
-  padding:6px 14px 0;
+  padding:6px 14px;
 }
 .project{
   padding:22px 0;
-  text-align:center;
-  border-radius:22px;
-  background:var(--card);
-  border:1px solid var(--stroke);
   font-size:18px;
 }
 
-/* assign */
+/* ===== ASSIGN ===== */
 .assign{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -71,11 +75,11 @@ body{
   padding:14px;
 }
 
-/* timer */
+/* ===== TIMER ===== */
 .timer-wrap{
   display:flex;
   justify-content:center;
-  margin-top:20px;
+  margin:20px 0 90px;
 }
 .timer{
   width:260px;
@@ -91,46 +95,105 @@ body{
   border-color:var(--accent);
 }
 
+/* ===== BOTTOM ===== */
+.bottom{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  padding:14px;
+  background:linear-gradient(
+    to top,
+    rgba(0,0,0,.9),
+    rgba(0,0,0,.4)
+  );
+}
+
+/* ===== LIST ===== */
+.list{
+  padding:14px;
+  display:grid;
+  gap:14px;
+}
+.plus{
+  font-size:26px;
+  color:#aaa;
+}
+
+/* ===== HEADER ===== */
+.header{
+  padding:14px;
+}
+
 input[type=file]{display:none}
 </style>
 </head>
 
 <body>
 
-<div class="top">
-  <div class="btn" id="exportCSV">Експорт CSV</div>
-  <div class="btn" id="importCSV">Імпорт CSV</div>
-  <input type="file" id="fileInput" accept=".csv">
+<!-- ================= HOME ================= -->
+<div id="home">
+
+  <div class="top">
+    <div class="btn" onclick="exportCSV()">Експорт CSV</div>
+    <div class="btn" onclick="importCSV()">Імпорт CSV</div>
+    <input type="file" id="fileInput">
+  </div>
+
+  <div class="projects">
+    <div class="card project">Crypto</div>
+    <div class="card project">UAPP</div>
+  </div>
+
+  <div class="assign">
+    <div class="btn">Зачислити в Crypto</div>
+    <div class="btn">Зачислити в UAPP</div>
+  </div>
+
+  <div class="timer-wrap">
+    <div id="mainTimer" class="timer">00:00:00</div>
+  </div>
+
 </div>
 
-<div class="projects">
-  <div class="project">Crypto</div>
-  <div class="project">UAPP</div>
+<!-- ================= PROJECTS ================= -->
+<div id="projectsView" class="hidden">
+
+  <div class="header">
+    <div class="btn" onclick="goHome()">← Назад</div>
+  </div>
+
+  <div class="list" id="projectsList">
+    <div class="card project plus" onclick="addProject()">＋</div>
+  </div>
+
 </div>
 
-<div class="assign">
-  <div class="btn">Зачислити в Crypto</div>
-  <div class="btn">Зачислити в UAPP</div>
+<!-- ================= PROJECT ================= -->
+<div id="projectView" class="hidden">
+
+  <div class="header">
+    <div class="btn" onclick="backToProjects()">← Назад</div>
+  </div>
+
+  <div class="timer-wrap">
+    <div id="projectTimer" class="timer">00:00:00</div>
+  </div>
+
 </div>
 
-<div class="timer-wrap">
-  <div id="timer" class="timer">00:00:00</div>
+<!-- ================= BOTTOM ================= -->
+<div class="bottom">
+  <div class="btn" onclick="openProjects()">Проєкти</div>
 </div>
 
 <script>
-/* ===== TIMER STATE ===== */
-const STORAGE = "main_timer_state";
-
-let state = JSON.parse(localStorage.getItem(STORAGE)) || {
-  running:false,
-  elapsed:0,
-  startedAt:0
+/* ===== MAIN TIMER (PERSISTENT) ===== */
+const KEY="main_timer";
+let state=JSON.parse(localStorage.getItem(KEY))||{
+  running:false,elapsed:0,startedAt:0
 };
-
 let raf;
-const timer = document.getElementById("timer");
+const mainTimer=document.getElementById("mainTimer");
 
-/* ===== FORMAT ===== */
 function fmt(ms){
   const s=Math.floor(ms/1000);
   return [
@@ -140,26 +203,21 @@ function fmt(ms){
   ].join(":");
 }
 
-/* ===== SAVE ===== */
 function save(){
-  localStorage.setItem(STORAGE,JSON.stringify(state));
+  localStorage.setItem(KEY,JSON.stringify(state));
 }
 
-/* ===== RENDER ===== */
 function render(){
-  const now = state.running
-    ? state.elapsed + (Date.now()-state.startedAt)
+  const now=state.running
+    ? state.elapsed+(Date.now()-state.startedAt)
     : state.elapsed;
-
-  timer.textContent = fmt(now);
-  if(state.running) raf=requestAnimationFrame(render);
+  mainTimer.textContent=fmt(now);
+  if(state.running)raf=requestAnimationFrame(render);
 }
 
-/* ===== TOGGLE ===== */
-timer.onclick = () => {
+mainTimer.onclick=()=>{
   state.running=!state.running;
-  timer.classList.toggle("active",state.running);
-
+  mainTimer.classList.toggle("active",state.running);
   if(state.running){
     state.startedAt=Date.now();
     render();
@@ -171,31 +229,111 @@ timer.onclick = () => {
   save();
 };
 
-/* ===== INIT ===== */
-timer.classList.toggle("active",state.running);
+mainTimer.classList.toggle("active",state.running);
 render();
 
+/* ===== NAV ===== */
+function openProjects(){
+  home.classList.add("hidden");
+  projectsView.classList.remove("hidden");
+}
+function goHome(){
+  projectsView.classList.add("hidden");
+  projectView.classList.add("hidden");
+  home.classList.remove("hidden");
+}
+function backToProjects(){
+  projectView.classList.add("hidden");
+  projectsView.classList.remove("hidden");
+}
+
+/* ===== PROJECTS ===== */
+let projects=JSON.parse(localStorage.getItem("projects")||"[]");
+const list=document.getElementById("projectsList");
+
+function renderProjects(){
+  list.innerHTML='<div class="card project plus" onclick="addProject()">＋</div>';
+  projects.forEach(p=>{
+    const d=document.createElement("div");
+    d.className="card project";
+    d.textContent=p;
+    d.onclick=()=>openProject(p);
+    list.appendChild(d);
+  });
+}
+
+function addProject(){
+  const name=prompt("Назва проєкту");
+  if(!name)return;
+  projects.unshift(name);
+  localStorage.setItem("projects",JSON.stringify(projects));
+  renderProjects();
+}
+
+let currentProject=null,projState,projRaf;
+const projectTimer=document.getElementById("projectTimer");
+
+function openProject(name){
+  currentProject=name;
+  projectsView.classList.add("hidden");
+  projectView.classList.remove("hidden");
+
+  const key="proj_"+name;
+  projState=JSON.parse(localStorage.getItem(key))||{
+    running:false,elapsed:0,startedAt:0
+  };
+
+  projectTimer.classList.toggle("active",projState.running);
+  renderProject();
+}
+
+function renderProject(){
+  const now=projState.running
+    ? projState.elapsed+(Date.now()-projState.startedAt)
+    : projState.elapsed;
+  projectTimer.textContent=fmt(now);
+  if(projState.running)projRaf=requestAnimationFrame(renderProject);
+}
+
+projectTimer.onclick=()=>{
+  projState.running=!projState.running;
+  projectTimer.classList.toggle("active",projState.running);
+  if(projState.running){
+    projState.startedAt=Date.now();
+    renderProject();
+  }else{
+    projState.elapsed+=Date.now()-projState.startedAt;
+    projState.startedAt=0;
+    cancelAnimationFrame(projRaf);
+  }
+  localStorage.setItem("proj_"+currentProject,JSON.stringify(projState));
+};
+
+renderProjects();
+
 /* ===== CSV ===== */
-exportCSV.onclick=()=>{
-  let csv="elapsed_ms\n"+state.elapsed;
+function exportCSV(){
+  let csv="key,value\n";
+  Object.keys(localStorage).forEach(k=>{
+    csv+=`${k},${localStorage[k]}\n`;
+  });
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
   a.download="work-time.csv";
   a.click();
-};
-
-importCSV.onclick=()=>fileInput.click();
+}
+function importCSV(){
+  fileInput.click();
+}
 fileInput.onchange=e=>{
   const r=new FileReader();
   r.onload=()=>{
-    const v=Number(r.result.split("\n")[1]);
-    if(!isNaN(v)){
-      state.elapsed=v;
-      state.running=false;
-      state.startedAt=0;
-      save();
-      render();
-    }
+    r.result.split("\n").slice(1).forEach(l=>{
+      if(!l)return;
+      const [k,v]=l.split(",");
+      localStorage.setItem(k,v);
+    });
+    alert("Імпортовано");
   };
   r.readAsText(e.target.files[0]);
 };
