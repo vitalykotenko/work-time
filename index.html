@@ -472,10 +472,7 @@ function loadDays(){
      let pressTimer;
       let longPress = false;
 
-row.addEventListener("touchstart", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-
+row.addEventListener("touchstart", () => {
   longPress = false;
 
   pressTimer = setTimeout(() => {
@@ -493,11 +490,8 @@ row.addEventListener("touchcancel", () => {
   clearTimeout(pressTimer);
 });
 
-row.onclick = (e) => {
-  if (longPress) {
-    e.preventDefault();
-    return;
-  }
+row.onclick = () => {
+  if (longPress) return;
 
   document.querySelectorAll(".day")
     .forEach(x => x.classList.remove("active"));
