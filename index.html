@@ -7,12 +7,13 @@
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#000">
 
 <style>
 :root{
   --bg:#000;
   --glass:rgba(28,28,30,.72);
+  --glass-light:rgba(58,58,60,.55);
   --stroke:rgba(255,255,255,.18);
   --stroke-soft:rgba(255,255,255,.08);
   --accent:#0A84FF;
@@ -58,7 +59,7 @@ body{
   padding:14px;
 }
 
-/* ===== PROJECTS ===== */
+/* ===== PROJECTS HOME ===== */
 .projects{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -112,13 +113,12 @@ body{
   top:0;
   width:200%;
   height:200%;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(10,132,255,.35),
-      rgba(10,132,255,.15),
-      rgba(10,132,255,.35)
-    );
+  background:linear-gradient(
+    90deg,
+    rgba(10,132,255,.35),
+    rgba(10,132,255,.15),
+    rgba(10,132,255,.35)
+  );
   border-radius:45%;
   opacity:0;
 }
@@ -159,13 +159,27 @@ body{
   background:linear-gradient(to top,rgba(0,0,0,.9),rgba(0,0,0,.4));
 }
 
+/* ===== SECONDARY PROJECTS ===== */
+.secondary-list{
+  padding:14px;
+  display:grid;
+  gap:14px;
+}
+.plus{
+  background:var(--glass-light);
+  font-size:28px;
+  text-align:center;
+  padding:22px 0;
+  color:#aaa;
+}
+
 input[type=file]{display:none}
 </style>
 </head>
 
 <body>
 
-<!-- ===== HOME ===== -->
+<!-- ================= HOME ================= -->
 <div id="home">
   <div class="top">
     <div class="btn" onclick="exportCSV()">Експорт CSV</div>
@@ -174,19 +188,19 @@ input[type=file]{display:none}
   </div>
 
   <div class="projects">
-    <div class="card project" onclick="openProject('Crypto')">
+    <div class="card project">
       <div class="name">Crypto</div>
       <div class="today" id="today_crypto">Сьогодні 00:00</div>
     </div>
-    <div class="card project" onclick="openProject('UAPP')">
+    <div class="card project">
       <div class="name">UAPP</div>
       <div class="today" id="today_uapp">Сьогодні 00:00</div>
     </div>
   </div>
 
   <div class="assign">
-    <div class="btn disabled" id="assignCrypto" onclick="assign('Crypto')">Зачислити в Crypto</div>
-    <div class="btn disabled" id="assignUapp" onclick="assign('UAPP')">Зачислити в UAPP</div>
+    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
+    <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
   </div>
 
   <div class="timer-wrap">
@@ -197,10 +211,20 @@ input[type=file]{display:none}
   </div>
 </div>
 
-<!-- ===== PROJECT ===== -->
-<div id="projectView" class="hidden">
+<!-- ================= SECONDARY PROJECTS ================= -->
+<div id="projectsView" class="hidden">
   <div class="header">
     <div class="btn" onclick="goHome()">← Назад</div>
+  </div>
+  <div class="secondary-list" id="secondaryList">
+    <div class="card plus" onclick="addSecondary()">＋</div>
+  </div>
+</div>
+
+<!-- ================= PROJECT ================= -->
+<div id="projectView" class="hidden">
+  <div class="header">
+    <div class="btn" onclick="backToProjects()">← Назад</div>
   </div>
 
   <div class="timer-wrap">
@@ -213,157 +237,156 @@ input[type=file]{display:none}
   <div class="days" id="daysList"></div>
 </div>
 
-<!-- ===== BOTTOM BUTTON ===== -->
 <div class="bottom" id="bottomBar">
-  <div class="btn" onclick="openProjects()">Проєкти</div>
+  <div class="btn" onclick="openSecondary()">Проєкти</div>
 </div>
 
 <script>
 /* ===== HELPERS ===== */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
-
-function fmt(ms){
-  const s=Math.floor(ms/1000);
-  return String(Math.floor(s/3600)).padStart(2,"0")+":"+
-         String(Math.floor(s%3600/60)).padStart(2,"0");
-}
-function fmtFull(ms){
-  const s=Math.floor(ms/1000);
+const fmtFull=t=>{
+  const s=Math.floor(t/1000);
   return String(Math.floor(s/3600)).padStart(2,"0")+":"+
          String(Math.floor(s%3600/60)).padStart(2,"0")+":"+
          String(s%60).padStart(2,"0");
-}
+};
 function dayKey(){
   const d=new Date(Date.now()-5*3600000);
   return d.toISOString().slice(0,10);
 }
 
 /* ===== MAIN TIMER ===== */
-let main={running:false,elapsed:0,start:0};
+let main={run:false,t:0,s:0};
 const mainTimer=document.getElementById("mainTimer");
 
-function renderMain(){
-  const now=main.running
-    ? main.elapsed+(Date.now()-main.start)
-    : main.elapsed;
-  mainTimer.querySelector(".time").textContent=fmtFull(now);
+function tickMain(){
+  const v=main.run?main.t+(Date.now()-main.s):main.t;
+  mainTimer.querySelector(".time").textContent=fmtFull(v);
   updateAssignButtons();
-  if(main.running)requestAnimationFrame(renderMain);
+  if(main.run)requestAnimationFrame(tickMain);
 }
 mainTimer.onclick=()=>{
-  main.running=!main.running;
-  mainTimer.classList.toggle("active",main.running);
-  if(main.running){
-    main.start=Date.now();
-    renderMain();
-  }else{
-    main.elapsed+=Date.now()-main.start;
-  }
+  main.run=!main.run;
+  mainTimer.classList.toggle("active",main.run);
+  if(main.run){main.s=Date.now();tickMain()}
+  else{main.t+=Date.now()-main.s}
 };
-renderMain();
+tickMain();
 
-/* ===== ASSIGN ===== */
-function assign(project){
-  if(main.elapsed<=0)return;
-  const key=`proj_${project}_days`;
-  const days=JSON.parse(localStorage.getItem(key)||"{}");
-  const d=dayKey();
-  days[d]=(days[d]||0)+main.elapsed;
-  localStorage.setItem(key,JSON.stringify(days));
-  main.elapsed=0;
-  main.running=false;
+/* ===== ASSIGN MAIN ===== */
+function assignMain(p){
+  if(main.t<=0)return;
+  const key=`main_${p}_${dayKey()}`;
+  localStorage[key]=(+localStorage[key]||0)+main.t;
+  main.t=0;main.run=false;
   mainTimer.classList.remove("active");
-  renderMain();
-  updateToday();
+  tickMain();
 }
 
-/* ===== ASSIGN BUTTON STATE ===== */
+/* ===== ASSIGN BUTTONS ===== */
 function updateAssignButtons(){
-  const active=main.elapsed>0;
-  assignCrypto.classList.toggle("disabled",!active);
-  assignUapp.classList.toggle("disabled",!active);
+  const a=main.t>0;
+  assignCrypto.classList.toggle("disabled",!a);
+  assignUapp.classList.toggle("disabled",!a);
 }
-
-/* ===== TODAY ===== */
-function updateToday(){
-  ["Crypto","UAPP"].forEach(p=>{
-    const days=JSON.parse(localStorage.getItem(`proj_${p}_days`)||"{}");
-    document.getElementById("today_"+p.toLowerCase()).textContent=
-      "Сьогодні "+fmt(days[dayKey()]||0);
-  });
-}
-updateToday();
 
 /* ===== NAV ===== */
-let currentProject=null;
-const bottomBar=document.getElementById("bottomBar");
-
-function openProjects(){}
-
-function openProject(name){
-  currentProject=name;
+let currentSecondary=null;
+function openSecondary(){
   home.classList.add("hidden");
-  projectView.classList.remove("hidden");
+  projectsView.classList.remove("hidden");
   bottomBar.classList.add("hidden");
-  loadProjectDays();
+  renderSecondary();
 }
 function goHome(){
+  projectsView.classList.add("hidden");
   projectView.classList.add("hidden");
   home.classList.remove("hidden");
   bottomBar.classList.remove("hidden");
-  updateToday();
+}
+function backToProjects(){
+  projectView.classList.add("hidden");
+  projectsView.classList.remove("hidden");
 }
 
-/* ===== PROJECT TIMER ===== */
-let proj={running:false,elapsed:0,start:0};
+/* ===== SECONDARY PROJECTS ===== */
+function getSecondary(){
+  return JSON.parse(localStorage.secondaryProjects||"[]");
+}
+function saveSecondary(list){
+  localStorage.secondaryProjects=JSON.stringify(list);
+}
+function renderSecondary(){
+  const list=getSecondary();
+  secondaryList.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
+  list.forEach(name=>{
+    const d=document.createElement("div");
+    d.className="card";
+    d.textContent=name;
+    d.onclick=()=>openSecondaryProject(name);
+    secondaryList.appendChild(d);
+  });
+}
+function addSecondary(){
+  const name=prompt("Назва проєкту");
+  if(!name)return;
+  const list=getSecondary();
+  list.unshift(name);
+  saveSecondary(list);
+  renderSecondary();
+}
+
+/* ===== SECONDARY PROJECT ===== */
+let proj={run:false,t:0,s:0};
 const projectTimer=document.getElementById("projectTimer");
 
+function openSecondaryProject(name){
+  currentSecondary=name;
+  projectsView.classList.add("hidden");
+  projectView.classList.remove("hidden");
+  loadDays();
+}
 projectTimer.onclick=()=>{
-  proj.running=!proj.running;
-  projectTimer.classList.toggle("active",proj.running);
-  if(proj.running){
-    proj.start=Date.now();
-    renderProject();
-  }else{
-    const delta=Date.now()-proj.start;
-    proj.elapsed+=delta;
-    saveProject(delta);
+  proj.run=!proj.run;
+  projectTimer.classList.toggle("active",proj.run);
+  if(proj.run){proj.s=Date.now();tickProject()}
+  else{
+    const d=Date.now()-proj.s;
+    proj.t+=d;
+    saveDay(d);
   }
 };
-function renderProject(){
-  const now=proj.running
-    ? proj.elapsed+(Date.now()-proj.start)
-    : proj.elapsed;
-  projectTimer.querySelector(".time").textContent=fmtFull(now);
-  if(proj.running)requestAnimationFrame(renderProject);
+function tickProject(){
+  const v=proj.run?proj.t+(Date.now()-proj.s):proj.t;
+  projectTimer.querySelector(".time").textContent=fmtFull(v);
+  if(proj.run)requestAnimationFrame(tickProject);
 }
-function saveProject(delta){
-  const key=`proj_${currentProject}_days`;
-  const days=JSON.parse(localStorage.getItem(key)||"{}");
-  const d=dayKey();
-  days[d]=(days[d]||0)+delta;
-  localStorage.setItem(key,JSON.stringify(days));
-  loadProjectDays();
+function saveDay(delta){
+  const key=`sec_${currentSecondary}_${dayKey()}`;
+  localStorage[key]=(+localStorage[key]||0)+delta;
+  loadDays();
 }
 
 /* ===== DAYS ===== */
-function loadProjectDays(){
-  const key=`proj_${currentProject}_days`;
-  const days=JSON.parse(localStorage.getItem(key)||"{}");
+function loadDays(){
   daysList.innerHTML="";
-  Object.keys(days).sort().reverse().forEach(d=>{
-    const date=new Date(d);
-    const row=document.createElement("div");
-    row.className="day";
-    row.innerHTML=
-      `<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[date.getDay()]}</span>
-       <span>${fmtFull(days[d])}</span>`;
-    row.onclick=()=>{
-      document.querySelectorAll(".day").forEach(x=>x.classList.remove("active"));
-      row.classList.add("active");
-    };
-    daysList.appendChild(row);
-  });
+  Object.keys(localStorage)
+    .filter(k=>k.startsWith(`sec_${currentSecondary}_`))
+    .sort().reverse()
+    .forEach(k=>{
+      const date=k.split("_")[2];
+      const d=new Date(date);
+      const row=document.createElement("div");
+      row.className="day";
+      row.innerHTML=
+        `<span>${date.slice(8,10)}.${date.slice(5,7)} ${daysUA[d.getDay()]}</span>
+         <span>${fmtFull(+localStorage[k])}</span>`;
+      row.onclick=()=>{
+        document.querySelectorAll(".day").forEach(x=>x.classList.remove("active"));
+        row.classList.add("active");
+      };
+      daysList.appendChild(row);
+    });
 }
 
 /* ===== CSV ===== */
@@ -383,7 +406,7 @@ fileInput.onchange=e=>{
       const [k,v]=l.split(",");
       if(k)localStorage[k]=v;
     });
-    updateToday();
+    location.reload();
   };
   r.readAsText(e.target.files[0]);
 };
