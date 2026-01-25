@@ -471,11 +471,22 @@ function loadDays(){
       // ВЫДЕЛЕНИЕ СТРОКИ ПРИ КЛИКЕ
      let pressTimer;
 
-row.addEventListener("touchstart", () => {
+row.addEventListener("touchstart", (e) => {
+  e.preventDefault();      // 🔥 ВАЖНО
+  e.stopPropagation();     // 🔥 ВАЖНО
+
   pressTimer = setTimeout(() => {
-    selectedDayKey = k; // запоминаем ключ дня
+    selectedDayKey = k;
     openDayEditor();
-  }, 500); // долгий тап
+  }, 500);
+});
+
+row.addEventListener("touchend", () => {
+  clearTimeout(pressTimer);
+});
+
+row.addEventListener("touchcancel", () => {
+  clearTimeout(pressTimer);
 });
 
 row.addEventListener("touchend", () => {
