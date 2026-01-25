@@ -275,41 +275,85 @@ const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
 /* MAIN */
-let main={run:false,t:0,s:0};
-const mainTimer=document.getElementById("mainTimer");
+let main = {
+  t: +localStorage.main_total || 0,
+  s: +localStorage.main_start || 0,
+  run: false
+};
+
+const mainTimer = document.getElementById("mainTimer");
+
+// восстановление состояния после reload
+if (main.s) {
+  main.run = true;
+  mainTimer.classList.add("active");
+}
 
 function tickMain(){
-  const v=main.run?main.t+(Date.now()-main.s):main.t;
-  mainTimer.querySelector(".time").textContent=fmt(v);
+  const v = main.run
+    ? main.t + (Date.now() - main.s)
+    : main.t;
+
+  mainTimer.querySelector(".time").textContent = fmt(v);
   updateAssign();
-  if(main.run)requestAnimationFrame(tickMain);
+  requestAnimationFrame(tickMain);
 }
-mainTimer.onclick=()=>{
-  main.run=!main.run;
-  mainTimer.classList.toggle("active",main.run);
-  if(main.run){main.s=Date.now();tickMain()}
-  else main.t+=Date.now()-main.s;
+
+mainTimer.onclick = () => {
+  if (main.run) {
+    // STOP
+    main.t += Date.now() - main.s;
+    main.s = 0;
+    main.run = false;
+
+    localStorage.main_start = 0;
+    localStorage.main_total = main.t;
+    mainTimer.classList.remove("active");
+  } else {
+    // START
+    main.s = Date.now();
+    main.run = true;
+
+    localStorage.main_start = main.s;
+    localStorage.main_total = main.t;
+    mainTimer.classList.add("active");
+  }
 };
-function adjustMain(d){main.t=Math.max(0,main.t+d);tickMain()}
+
+function adjustMain(d){
+  main.t = Math.max(0, main.t + d);
+  localStorage.main_total = main.t;
+}
+
 function assignMain(p){
-  if(!main.t)return;
-  localStorage[k("main",p)]=(+(localStorage[k("main",p)]||0))+main.t;
-  main={run:false,t:0,s:0};
+  if (!main.t) return;
+
+  localStorage[k("main", p)] =
+    (+(localStorage[k("main", p)] || 0)) + main.t;
+
+  main = { t: 0, s: 0, run: false };
+  localStorage.main_start = 0;
+  localStorage.main_total = 0;
+
   mainTimer.classList.remove("active");
-  tickMain();updateToday();
+  updateToday();
 }
+
 function updateAssign(){
-  const a=main.t>0;
-  assignCrypto.classList.toggle("disabled",!a);
-  assignUapp.classList.toggle("disabled",!a);
+  const a = main.t > 0;
+  assignCrypto.classList.toggle("disabled", !a);
+  assignUapp.classList.toggle("disabled", !a);
 }
+
 function updateToday(){
   ["Crypto","UAPP"].forEach(p=>{
     document.getElementById("today_"+p.toLowerCase())
-      .textContent="Сьогодні "+fmt(+localStorage[k("main",p)]||0);
+      .textContent = "Сьогодні " + fmt(+localStorage[k("main",p)] || 0);
   });
 }
-tickMain();updateToday();
+
+tickMain();
+updateToday();
 
 /* NAV */
 let mode=null,cur=null;
