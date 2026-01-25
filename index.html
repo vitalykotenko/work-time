@@ -12,12 +12,16 @@
 <style>
 :root{
   --bg:#000;
-  --card:#1c1c1e;
-  --stroke:rgba(255,255,255,.18);
+  --glass:rgba(28,28,30,.72);
+  --stroke:rgba(255,255,255,.28);
   --accent:#0A84FF;
+  --radius:22px;
 }
 
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
 
 body{
   margin:0;
@@ -28,24 +32,46 @@ body{
 
 /* ===== COMMON ===== */
 .hidden{display:none}
+.btn, .card, .timer{
+  position:relative;
+  background:var(--glass);
+  backdrop-filter:blur(26px);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+
+/* ===== CORNER STROKES ===== */
+.btn::before,
+.card::before,
+.timer::before{
+  content:"";
+  position:absolute;
+  top:0; right:0;
+  width:40%;
+  height:1px;
+  background:linear-gradient(to left, var(--stroke), transparent);
+}
+
+.btn::after,
+.card::after,
+.timer::after{
+  content:"";
+  position:absolute;
+  bottom:0; left:0;
+  width:40%;
+  height:1px;
+  background:linear-gradient(to right, var(--stroke), transparent);
+}
+
+/* ===== BUTTON ===== */
 .btn{
   padding:14px;
-  border-radius:18px;
-  background:var(--card);
-  border:1px solid var(--stroke);
-  color:var(--accent);
   text-align:center;
+  color:var(--accent);
   font-size:16px;
   white-space:nowrap;
 }
 .btn:active{transform:scale(.97)}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--stroke);
-  border-radius:22px;
-  text-align:center;
-}
 
 /* ===== TOP ===== */
 .top{
@@ -64,6 +90,7 @@ body{
 }
 .project{
   padding:22px 0;
+  text-align:center;
   font-size:18px;
 }
 
@@ -79,20 +106,20 @@ body{
 .timer-wrap{
   display:flex;
   justify-content:center;
-  margin:20px 0 90px;
+  margin:30px 0 90px;
 }
 .timer{
   width:260px;
   height:260px;
   border-radius:50%;
-  border:1.5px solid var(--stroke);
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:40px;
+  font-weight:600;
 }
 .timer.active{
-  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(10,132,255,.25);
 }
 
 /* ===== BOTTOM ===== */
@@ -180,13 +207,13 @@ input[type=file]{display:none}
 
 </div>
 
-<!-- ================= BOTTOM ================= -->
-<div class="bottom">
+<!-- ================= BOTTOM (HOME ONLY) ================= -->
+<div id="bottomBar" class="bottom">
   <div class="btn" onclick="openProjects()">Проєкти</div>
 </div>
 
 <script>
-/* ===== MAIN TIMER (PERSISTENT) ===== */
+/* ===== MAIN TIMER ===== */
 const KEY="main_timer";
 let state=JSON.parse(localStorage.getItem(KEY))||{
   running:false,elapsed:0,startedAt:0
@@ -202,11 +229,7 @@ function fmt(ms){
     String(s%60).padStart(2,"0")
   ].join(":");
 }
-
-function save(){
-  localStorage.setItem(KEY,JSON.stringify(state));
-}
-
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
 function render(){
   const now=state.running
     ? state.elapsed+(Date.now()-state.startedAt)
@@ -214,33 +237,33 @@ function render(){
   mainTimer.textContent=fmt(now);
   if(state.running)raf=requestAnimationFrame(render);
 }
-
 mainTimer.onclick=()=>{
   state.running=!state.running;
   mainTimer.classList.toggle("active",state.running);
   if(state.running){
-    state.startedAt=Date.now();
-    render();
+    state.startedAt=Date.now(); render();
   }else{
     state.elapsed+=Date.now()-state.startedAt;
-    state.startedAt=0;
-    cancelAnimationFrame(raf);
+    state.startedAt=0; cancelAnimationFrame(raf);
   }
   save();
 };
-
 mainTimer.classList.toggle("active",state.running);
 render();
 
 /* ===== NAV ===== */
+const bottomBar=document.getElementById("bottomBar");
+
 function openProjects(){
   home.classList.add("hidden");
   projectsView.classList.remove("hidden");
+  bottomBar.classList.add("hidden");
 }
 function goHome(){
   projectsView.classList.add("hidden");
   projectView.classList.add("hidden");
   home.classList.remove("hidden");
+  bottomBar.classList.remove("hidden");
 }
 function backToProjects(){
   projectView.classList.add("hidden");
@@ -261,7 +284,6 @@ function renderProjects(){
     list.appendChild(d);
   });
 }
-
 function addProject(){
   const name=prompt("Назва проєкту");
   if(!name)return;
@@ -269,7 +291,9 @@ function addProject(){
   localStorage.setItem("projects",JSON.stringify(projects));
   renderProjects();
 }
+renderProjects();
 
+/* ===== PROJECT TIMER ===== */
 let currentProject=null,projState,projRaf;
 const projectTimer=document.getElementById("projectTimer");
 
@@ -282,11 +306,9 @@ function openProject(name){
   projState=JSON.parse(localStorage.getItem(key))||{
     running:false,elapsed:0,startedAt:0
   };
-
   projectTimer.classList.toggle("active",projState.running);
   renderProject();
 }
-
 function renderProject(){
   const now=projState.running
     ? projState.elapsed+(Date.now()-projState.startedAt)
@@ -294,37 +316,28 @@ function renderProject(){
   projectTimer.textContent=fmt(now);
   if(projState.running)projRaf=requestAnimationFrame(renderProject);
 }
-
 projectTimer.onclick=()=>{
   projState.running=!projState.running;
   projectTimer.classList.toggle("active",projState.running);
   if(projState.running){
-    projState.startedAt=Date.now();
-    renderProject();
+    projState.startedAt=Date.now(); renderProject();
   }else{
     projState.elapsed+=Date.now()-projState.startedAt;
-    projState.startedAt=0;
-    cancelAnimationFrame(projRaf);
+    projState.startedAt=0; cancelAnimationFrame(projRaf);
   }
   localStorage.setItem("proj_"+currentProject,JSON.stringify(projState));
 };
 
-renderProjects();
-
 /* ===== CSV ===== */
 function exportCSV(){
   let csv="key,value\n";
-  Object.keys(localStorage).forEach(k=>{
-    csv+=`${k},${localStorage[k]}\n`;
-  });
+  Object.keys(localStorage).forEach(k=>csv+=`${k},${localStorage[k]}\n`);
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
   a.download="work-time.csv";
   a.click();
 }
-function importCSV(){
-  fileInput.click();
-}
+function importCSV(){fileInput.click()}
 fileInput.onchange=e=>{
   const r=new FileReader();
   r.onload=()=>{
