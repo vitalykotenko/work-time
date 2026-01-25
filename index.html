@@ -15,7 +15,6 @@
   --glass:rgba(28,28,30,.72);
   --glass-light:rgba(58,58,60,.55);
   --stroke:rgba(255,255,255,.18);
-  --stroke-soft:rgba(255,255,255,.08);
   --accent:#0A84FF;
   --radius:22px;
   --sub:#8E8E93;
@@ -30,197 +29,61 @@ body{
 }
 .hidden{display:none}
 
-/* COMMON */
 .btn,.card,.timer,.day,.adjust{
   background:var(--glass);
   backdrop-filter:blur(26px);
   border-radius:var(--radius);
   border:1px solid var(--stroke);
-  box-shadow:inset 0 0 0 1px var(--stroke-soft);
 }
-.btn{
-  padding:14px;
-  text-align:center;
-  color:var(--accent);
-  font-size:16px;
-  white-space:nowrap;
-}
-.btn:active,.adjust:active{transform:scale(.95)}
+.btn{padding:14px;text-align:center;color:var(--accent)}
 .btn.disabled{opacity:.35;pointer-events:none}
 .card{padding:18px}
 
-/* TOP */
-.top{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  padding:14px;
-}
+.projects{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px}
+.assign{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px}
 
-/* HOME PROJECTS */
-.projects{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-  padding:6px 14px;
-}
-.project .name{font-size:18px}
-.project .today{
-  margin-top:6px;
-  font-size:13px;
-  color:var(--sub);
-}
-
-/* ASSIGN */
-.assign{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  padding:14px;
-}
-
-/* TIMER */
-.timer-wrap{
-  display:flex;
-  justify-content:center;
-  margin:30px 0 16px;
-}
+.timer-wrap{display:flex;justify-content:center;margin:24px 0}
 .timer{
-  width:260px;
-  height:260px;
-  border-radius:50%;
-  position:relative;
-  overflow:hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:40px;
-  font-weight:600;
+  width:260px;height:260px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;font-weight:600;
 }
-.timer.active{
-  background:rgba(10,132,255,.25);
-  border-color:rgba(10,132,255,.55);
-  box-shadow:0 0 40px rgba(10,132,255,.35);
-}
-.timer .time{z-index:2}
+.timer.active{background:rgba(10,132,255,.25)}
 
-/* WAVE */
-.wave{
-  position:absolute;
-  left:-50%;
-  top:0;
-  width:200%;
-  height:200%;
-  background:linear-gradient(
-    90deg,
-    rgba(10,132,255,.35),
-    rgba(10,132,255,.15),
-    rgba(10,132,255,.35)
-  );
-  border-radius:45%;
-  opacity:0;
-}
-.timer.active .wave{
-  opacity:1;
-  animation:wave 8s linear infinite;
-}
-@keyframes wave{
-  from{transform:translateX(-25%) rotate(0deg)}
-  to{transform:translateX(25%) rotate(360deg)}
-}
-
-/* TIME ADJUST */
-.time-adjust{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin:12px 0 18px;
-}
+.time-adjust{display:flex;justify-content:center;gap:12px;margin-bottom:20px}
 .adjust{
-  width:52px;
-  height:52px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
   color:var(--accent);
-  font-size:15px;
 }
 
-/* DAYS */
-.days{
-  padding:14px;
-  display:grid;
-  gap:10px;
-}
-.day{
-  display:flex;
-  justify-content:space-between;
-  padding:12px 14px;
-  font-size:15px;
-}
-.day.active{
-  background:rgba(10,132,255,.18);
-  border-color:rgba(10,132,255,.55);
-}
-
-/* HEADER */
-.header{padding:14px}
-
-/* SECONDARY */
-.secondary-list{
-  padding:14px;
-  display:grid;
-  gap:14px;
-}
-.plus{
-  background:var(--glass-light);
-  font-size:28px;
-  text-align:center;
-  padding:22px 0;
-  color:#aaa;
-}
-
-/* BOTTOM (not fixed) */
-.bottom{
-  padding:14px;
-}
-
-input[type=file]{display:none}
+.days{padding:14px;display:grid;gap:10px}
+.day{display:flex;justify-content:space-between;padding:12px}
+.day.active{background:rgba(10,132,255,.2)}
 </style>
 </head>
-
 <body>
 
 <!-- HOME -->
 <div id="home">
-  <div class="top">
-    <div class="btn" onclick="exportCSV()">Експорт CSV</div>
-    <div class="btn" onclick="importCSV()">Імпорт CSV</div>
-    <input type="file" id="fileInput">
-  </div>
-
   <div class="projects">
-    <div class="card project" onclick="openMainProject('Crypto')">
-      <div class="name">Crypto</div>
-      <div class="today" id="today_crypto">Сьогодні 00:00:00</div>
+    <div class="card" onclick="openProject('Crypto')">
+      <div>Crypto</div>
+      <div id="today_Crypto">Сьогодні 00:00:00</div>
     </div>
-    <div class="card project" onclick="openMainProject('UAPP')">
-      <div class="name">UAPP</div>
-      <div class="today" id="today_uapp">Сьогодні 00:00:00</div>
+    <div class="card" onclick="openProject('UAPP')">
+      <div>UAPP</div>
+      <div id="today_UAPP">Сьогодні 00:00:00</div>
     </div>
   </div>
 
   <div class="assign">
-    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
-    <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
+    <div class="btn" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
+    <div class="btn" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
   </div>
 
   <div class="timer-wrap">
-    <div id="mainTimer" class="timer">
-      <div class="wave"></div>
-      <span class="time">00:00:00</span>
-    </div>
+    <div id="mainTimer" class="timer">00:00:00</div>
   </div>
 
   <div class="time-adjust">
@@ -229,243 +92,121 @@ input[type=file]{display:none}
     <div class="adjust" onclick="adjustMain(60000)">+1</div>
     <div class="adjust" onclick="adjustMain(600000)">+10</div>
   </div>
-
-  <div class="bottom">
-    <div class="btn" onclick="openSecondary()">Проєкти</div>
-  </div>
-</div>
-
-<!-- SECONDARY PROJECTS -->
-<div id="projectsView" class="hidden">
-  <div class="header">
-    <div class="btn" onclick="goHome()">← Назад</div>
-  </div>
-  <div class="secondary-list" id="secondaryList">
-    <div class="card plus" onclick="addSecondary()">＋</div>
-  </div>
 </div>
 
 <!-- PROJECT -->
 <div id="projectView" class="hidden">
-  <div class="header">
-    <div class="btn" onclick="backFromProject()">← Назад</div>
-  </div>
+  <div class="btn" onclick="goHome()">← Назад</div>
+
   <div class="timer-wrap">
-    <div id="projectTimer" class="timer">
-      <div class="wave"></div>
-      <span class="time">00:00:00</span>
-    </div>
+    <div id="projectTimer" class="timer">00:00:00</div>
   </div>
+
   <div class="time-adjust">
     <div class="adjust" onclick="adjustProject(-600000)">-10</div>
     <div class="adjust" onclick="adjustProject(-60000)">-1</div>
     <div class="adjust" onclick="adjustProject(60000)">+1</div>
     <div class="adjust" onclick="adjustProject(600000)">+10</div>
   </div>
+
   <div class="days" id="daysList"></div>
 </div>
 
 <script>
-/* HELPERS */
-const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
-const fmtFull=t=>{
+const fmt=t=>{
   const s=Math.floor(t/1000);
   return String(Math.floor(s/3600)).padStart(2,"0")+":"+
          String(Math.floor(s%3600/60)).padStart(2,"0")+":"+
          String(s%60).padStart(2,"0");
 };
-function dayKey(){
-  const d=new Date(Date.now()-5*3600000);
-  return d.toISOString().slice(0,10);
-}
+const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 
 /* MAIN TIMER */
-let main={run:false,t:0,s:0};
-const mainTimer=document.getElementById("mainTimer");
-function tickMain(){
+let main=JSON.parse(localStorage.mainTimer||'{"run":false,"t":0,"s":0}');
+const mainEl=document.getElementById("mainTimer");
+
+function renderMain(){
   const v=main.run?main.t+(Date.now()-main.s):main.t;
-  mainTimer.querySelector(".time").textContent=fmtFull(v);
-  updateAssignButtons();
-  if(main.run)requestAnimationFrame(tickMain);
+  mainEl.textContent=fmt(v);
+  localStorage.mainTimer=JSON.stringify(main);
+  if(main.run)requestAnimationFrame(renderMain);
 }
-mainTimer.onclick=()=>{
+mainEl.onclick=()=>{
   main.run=!main.run;
-  mainTimer.classList.toggle("active",main.run);
-  if(main.run){main.s=Date.now();tickMain()}
-  else{main.t+=Date.now()-main.s}
+  main.run?main.s=Date.now():main.t+=Date.now()-main.s;
+  renderMain();
 };
-tickMain();
+function adjustMain(d){main.t=Math.max(0,main.t+d);renderMain()}
+renderMain();
 
-function adjustMain(delta){
-  main.t=Math.max(0,main.t+delta);
-  tickMain();
-}
-
-/* ASSIGN MAIN */
 function assignMain(p){
-  if(main.t<=0)return;
-  const key=`main_${p}_${dayKey()}`;
-  localStorage[key]=(+localStorage[key]||0)+main.t;
+  const k=`main_${p}_${dayKey()}`;
+  localStorage[k]=(+localStorage[k]||0)+main.t;
   main.t=0;main.run=false;
-  mainTimer.classList.remove("active");
-  tickMain();
-  updateToday();
-}
-function updateAssignButtons(){
-  const a=main.t>0;
-  assignCrypto.classList.toggle("disabled",!a);
-  assignUapp.classList.toggle("disabled",!a);
+  renderMain();updateToday();
 }
 
-/* TODAY */
 function updateToday(){
   ["Crypto","UAPP"].forEach(p=>{
-    let sum=0;
-    const k=`main_${p}_${dayKey()}`;
-    if(localStorage[k])sum+=+localStorage[k];
-    document.getElementById("today_"+p.toLowerCase()).textContent="Сьогодні "+fmtFull(sum);
+    document.getElementById("today_"+p).textContent=
+      "Сьогодні "+fmt(+localStorage[`main_${p}_${dayKey()}`]||0);
   });
 }
 updateToday();
 
-/* NAV */
-let mode=null,currentProject=null;
-function openSecondary(){
+/* PROJECTS */
+let current=null;
+let projectTimers=JSON.parse(localStorage.projectTimers||"{}");
+const projEl=document.getElementById("projectTimer");
+
+function openProject(p){
+  current=p;
   home.classList.add("hidden");
-  projectsView.classList.remove("hidden");
+  projectView.classList.remove("hidden");
+  if(!projectTimers[p])projectTimers[p]={run:false,t:0,s:0};
+  renderProject();loadDays();
 }
 function goHome(){
-  projectsView.classList.add("hidden");
   projectView.classList.add("hidden");
   home.classList.remove("hidden");
-}
-function backFromProject(){
-  projectView.classList.add("hidden");
-  mode==="secondary"?projectsView.classList.remove("hidden"):goHome();
+  updateToday();
 }
 
-/* SECONDARY */
-function getSecondary(){
-  return JSON.parse(localStorage.secondaryProjects||"[]");
+function renderProject(){
+  const st=projectTimers[current];
+  const v=st.run?st.t+(Date.now()-st.s):st.t;
+  projEl.textContent=fmt(v);
+  localStorage.projectTimers=JSON.stringify(projectTimers);
+  if(st.run)requestAnimationFrame(renderProject);
 }
-function saveSecondary(l){
-  localStorage.secondaryProjects=JSON.stringify(l);
-}
-function renderSecondary(){
-  const l=getSecondary();
-  secondaryList.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
-  l.forEach(n=>{
-    const d=document.createElement("div");
-    d.className="card";
-    d.textContent=n;
-    d.onclick=()=>openSecondaryProject(n);
-    secondaryList.appendChild(d);
-  });
-}
-function addSecondary(){
-  const n=prompt("Назва проєкту");
-  if(!n)return;
-  const l=getSecondary();
-  l.unshift(n);
-  saveSecondary(l);
-  renderSecondary();
-}
-
-/* PROJECT OPEN */
-function openMainProject(name){
-  mode="main";
-  currentProject=name;
-  home.classList.add("hidden");
-  projectView.classList.remove("hidden");
-  loadMainDays(name);
-}
-function openSecondaryProject(name){
-  mode="secondary";
-  currentProject=name;
-  projectsView.classList.add("hidden");
-  projectView.classList.remove("hidden");
-  loadSecondaryDays(name);
-}
-
-/* PROJECT TIMER */
-let proj={run:false,t:0,s:0};
-const projectTimer=document.getElementById("projectTimer");
-projectTimer.onclick=()=>{
-  proj.run=!proj.run;
-  projectTimer.classList.toggle("active",proj.run);
-  if(proj.run){proj.s=Date.now();tickProject()}
-  else{
-    const d=Date.now()-proj.s;
-    proj.t+=d;
-    saveProject(d);
-  }
+projEl.onclick=()=>{
+  const st=projectTimers[current];
+  st.run=!st.run;
+  st.run?st.s=Date.now():st.t+=Date.now()-st.s;
+  renderProject();
 };
-function tickProject(){
-  const v=proj.run?proj.t+(Date.now()-proj.s):proj.t;
-  projectTimer.querySelector(".time").textContent=fmtFull(v);
-  if(proj.run)requestAnimationFrame(tickProject);
-}
-function adjustProject(delta){
-  proj.t=Math.max(0,proj.t+delta);
-  tickProject();
-}
-function saveProject(delta){
-  const key=(mode==="main"?"main_":"sec_")+currentProject+"_"+dayKey();
-  localStorage[key]=(+localStorage[key]||0)+delta;
-  mode==="main"?loadMainDays(currentProject):loadSecondaryDays(currentProject);
+
+function adjustProject(d){
+  const st=projectTimers[current];
+  st.t=Math.max(0,st.t+d);
+  const k=`main_${current}_${dayKey()}`;
+  localStorage[k]=(+localStorage[k]||0)+Math.max(0,d);
+  renderProject();loadDays();updateToday();
 }
 
 /* DAYS */
-function loadMainDays(name){
+function loadDays(){
   daysList.innerHTML="";
   Object.keys(localStorage)
-    .filter(k=>k.startsWith(`main_${name}_`))
+    .filter(k=>k.startsWith(`main_${current}_`))
     .sort().reverse()
-    .forEach(k=>renderDay(k));
-}
-function loadSecondaryDays(name){
-  daysList.innerHTML="";
-  Object.keys(localStorage)
-    .filter(k=>k.startsWith(`sec_${name}_`))
-    .sort().reverse()
-    .forEach(k=>renderDay(k));
-}
-function renderDay(k){
-  const date=k.split("_")[2];
-  const d=new Date(date);
-  const row=document.createElement("div");
-  row.className="day";
-  row.innerHTML=
-    `<span>${date.slice(8,10)}.${date.slice(5,7)} ${daysUA[d.getDay()]}</span>
-     <span>${fmtFull(+localStorage[k])}</span>`;
-  row.onclick=()=>{
-    document.querySelectorAll(".day").forEach(x=>x.classList.remove("active"));
-    row.classList.add("active");
-  };
-  daysList.appendChild(row);
-}
-
-/* CSV */
-function exportCSV(){
-  let csv="";
-  Object.keys(localStorage).forEach(k=>csv+=k+","+localStorage[k]+"\n");
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([csv]));
-  a.download="work-time.csv";
-  a.click();
-}
-function importCSV(){fileInput.click()}
-fileInput.onchange=e=>{
-  const r=new FileReader();
-  r.onload=()=>{
-    r.result.split("\n").forEach(l=>{
-      const [k,v]=l.split(",");
-      if(k)localStorage[k]=v;
+    .forEach(k=>{
+      const r=document.createElement("div");
+      r.className="day";
+      r.innerHTML=`<span>${k.slice(-2)}</span><span>${fmt(+localStorage[k])}</span>`;
+      daysList.appendChild(r);
     });
-    location.reload();
-  };
-  r.readAsText(e.target.files[0]);
-};
+}
 </script>
 </body>
 </html>
