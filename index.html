@@ -17,12 +17,10 @@
   --stroke-soft:rgba(255,255,255,.08);
   --accent:#0A84FF;
   --radius:22px;
+  --sub:#8E8E93;
 }
 
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
 body{
   margin:0;
@@ -33,7 +31,7 @@ body{
 
 .hidden{display:none}
 
-/* ===== BUTTONS / CARDS ===== */
+/* ===== COMMON ===== */
 .btn,.card,.timer{
   background:var(--glass);
   backdrop-filter:blur(26px);
@@ -51,6 +49,10 @@ body{
 }
 .btn:active{transform:scale(.97)}
 
+.card{
+  padding:18px;
+}
+
 /* ===== TOP ===== */
 .top{
   display:grid;
@@ -59,7 +61,7 @@ body{
   padding:14px;
 }
 
-/* ===== PROJECTS ===== */
+/* ===== PROJECTS (HOME) ===== */
 .projects{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -67,9 +69,15 @@ body{
   padding:6px 14px;
 }
 .project{
-  padding:22px 0;
   text-align:center;
+}
+.project .name{
   font-size:18px;
+}
+.project .today{
+  margin-top:6px;
+  font-size:13px;
+  color:var(--sub);
 }
 
 /* ===== ASSIGN ===== */
@@ -97,7 +105,7 @@ body{
   justify-content:center;
   font-size:40px;
   font-weight:600;
-  transition:background .25s ease, box-shadow .25s ease;
+  transition:.25s;
 }
 .timer.active{
   background:rgba(10,132,255,.22);
@@ -106,47 +114,37 @@ body{
     inset 0 0 0 1px rgba(10,132,255,.35),
     0 0 40px rgba(10,132,255,.25);
 }
+.timer .time{z-index:2}
 
-/* ===== TIMER CONTENT ===== */
-.timer .time{
-  position:relative;
-  z-index:2;
-}
-
-/* ===== WAVE ===== */
-.timer .wave{
+/* wave */
+.wave{
   position:absolute;
   left:-50%;
-  bottom:-35%;
+  bottom:-40%;
   width:200%;
   height:200%;
   background:rgba(255,255,255,.08);
   border-radius:45%;
-  z-index:1;
   opacity:0;
 }
 .timer.active .wave{
   opacity:1;
-  animation:waveMove 6s linear infinite;
+  animation:wave 6s linear infinite;
 }
-@keyframes waveMove{
-  from{transform:translateX(0) rotate(0deg);}
-  to{transform:translateX(50%) rotate(360deg);}
+@keyframes wave{
+  from{transform:translateX(0) rotate(0)}
+  to{transform:translateX(50%) rotate(360deg)}
 }
 
 /* ===== BOTTOM ===== */
 .bottom{
   position:fixed;
-  left:0; right:0; bottom:0;
+  left:0;right:0;bottom:0;
   padding:14px;
-  background:linear-gradient(
-    to top,
-    rgba(0,0,0,.9),
-    rgba(0,0,0,.4)
-  );
+  background:linear-gradient(to top,rgba(0,0,0,.9),rgba(0,0,0,.4));
 }
 
-/* ===== LIST ===== */
+/* ===== PROJECT LIST ===== */
 .list{
   padding:14px;
   display:grid;
@@ -154,13 +152,12 @@ body{
 }
 .plus{
   font-size:26px;
+  text-align:center;
   color:#aaa;
 }
 
 /* ===== HEADER ===== */
-.header{
-  padding:14px;
-}
+.header{padding:14px}
 
 input[type=file]{display:none}
 </style>
@@ -178,13 +175,19 @@ input[type=file]{display:none}
   </div>
 
   <div class="projects">
-    <div class="card project">Crypto</div>
-    <div class="card project">UAPP</div>
+    <div class="card project">
+      <div class="name">Crypto</div>
+      <div class="today" id="today_crypto">Сьогодні 00:00</div>
+    </div>
+    <div class="card project">
+      <div class="name">UAPP</div>
+      <div class="today" id="today_uapp">Сьогодні 00:00</div>
+    </div>
   </div>
 
   <div class="assign">
-    <div class="btn">Зачислити в Crypto</div>
-    <div class="btn">Зачислити в UAPP</div>
+    <div class="btn" onclick="assign('crypto')">Зачислити в Crypto</div>
+    <div class="btn" onclick="assign('uapp')">Зачислити в UAPP</div>
   </div>
 
   <div class="timer-wrap">
@@ -193,7 +196,6 @@ input[type=file]{display:none}
       <span class="time">00:00:00</span>
     </div>
   </div>
-
 </div>
 
 <!-- ================= PROJECTS ================= -->
@@ -202,7 +204,7 @@ input[type=file]{display:none}
     <div class="btn" onclick="goHome()">← Назад</div>
   </div>
   <div class="list" id="projectsList">
-    <div class="card project plus" onclick="addProject()">＋</div>
+    <div class="card plus" onclick="addProject()">＋</div>
   </div>
 </div>
 
@@ -219,13 +221,12 @@ input[type=file]{display:none}
   </div>
 </div>
 
-<!-- ================= BOTTOM (HOME ONLY) ================= -->
 <div id="bottomBar" class="bottom">
   <div class="btn" onclick="openProjects()">Проєкти</div>
 </div>
 
 <script>
-/* ===== FORMAT ===== */
+/* ===== HELPERS ===== */
 function fmt(ms){
   const s=Math.floor(ms/1000);
   return [
@@ -234,16 +235,19 @@ function fmt(ms){
     String(s%60).padStart(2,"0")
   ].join(":");
 }
+function todayKey(){
+  const d=new Date();
+  d.setHours(d.getHours()-5);
+  return d.toISOString().slice(0,10);
+}
 
 /* ===== MAIN TIMER ===== */
 const KEY="main_timer";
-let state=JSON.parse(localStorage.getItem(KEY))||{
-  running:false,elapsed:0,startedAt:0
-};
+let state=JSON.parse(localStorage.getItem(KEY))||{running:false,elapsed:0,startedAt:0};
 let raf;
 const mainTimer=document.getElementById("mainTimer");
 
-function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function saveMain(){localStorage.setItem(KEY,JSON.stringify(state))}
 function renderMain(){
   const now=state.running
     ? state.elapsed+(Date.now()-state.startedAt)
@@ -255,18 +259,44 @@ mainTimer.onclick=()=>{
   state.running=!state.running;
   mainTimer.classList.toggle("active",state.running);
   if(state.running){
-    state.startedAt=Date.now(); renderMain();
+    state.startedAt=Date.now();renderMain();
   }else{
     state.elapsed+=Date.now()-state.startedAt;
-    state.startedAt=0; cancelAnimationFrame(raf);
+    state.startedAt=0;cancelAnimationFrame(raf);
   }
-  save();
+  saveMain();
 };
 mainTimer.classList.toggle("active",state.running);
 renderMain();
 
+/* ===== ASSIGN ===== */
+function assign(project){
+  if(state.elapsed===0)return;
+  const key=`log_${project}_${todayKey()}`;
+  const prev=Number(localStorage.getItem(key)||0);
+  localStorage.setItem(key,prev+state.elapsed);
+  state.elapsed=0;
+  state.running=false;
+  state.startedAt=0;
+  saveMain();
+  mainTimer.classList.remove("active");
+  renderMain();
+  updateToday();
+}
+
+/* ===== TODAY TOTAL ===== */
+function sumToday(project){
+  return Number(localStorage.getItem(`log_${project}_${todayKey()}`)||0);
+}
+function updateToday(){
+  document.getElementById("today_crypto").textContent=
+    "Сьогодні "+fmt(sumToday("crypto"));
+  document.getElementById("today_uapp").textContent=
+    "Сьогодні "+fmt(sumToday("uapp"));
+}
+updateToday();
+
 /* ===== NAV ===== */
-const bottomBar=document.getElementById("bottomBar");
 function openProjects(){
   home.classList.add("hidden");
   projectsView.classList.remove("hidden");
@@ -283,15 +313,15 @@ function backToProjects(){
   projectsView.classList.remove("hidden");
 }
 
-/* ===== PROJECTS ===== */
+/* ===== PROJECTS (CUSTOM) ===== */
 let projects=JSON.parse(localStorage.getItem("projects")||"[]");
 const list=document.getElementById("projectsList");
 
 function renderProjects(){
-  list.innerHTML='<div class="card project plus" onclick="addProject()">＋</div>';
+  list.innerHTML='<div class="card plus" onclick="addProject()">＋</div>';
   projects.forEach(p=>{
     const d=document.createElement("div");
-    d.className="card project";
+    d.className="card";
     d.textContent=p;
     d.onclick=()=>openProject(p);
     list.appendChild(d);
@@ -307,18 +337,15 @@ function addProject(){
 renderProjects();
 
 /* ===== PROJECT TIMER ===== */
-let currentProject=null,projState,projRaf;
+let projState,projRaf,currentProject;
 const projectTimer=document.getElementById("projectTimer");
 
 function openProject(name){
   currentProject=name;
   projectsView.classList.add("hidden");
   projectView.classList.remove("hidden");
-
   const key="proj_"+name;
-  projState=JSON.parse(localStorage.getItem(key))||{
-    running:false,elapsed:0,startedAt:0
-  };
+  projState=JSON.parse(localStorage.getItem(key))||{running:false,elapsed:0,startedAt:0};
   projectTimer.classList.toggle("active",projState.running);
   renderProject();
 }
@@ -333,10 +360,10 @@ projectTimer.onclick=()=>{
   projState.running=!projState.running;
   projectTimer.classList.toggle("active",projState.running);
   if(projState.running){
-    projState.startedAt=Date.now(); renderProject();
+    projState.startedAt=Date.now();renderProject();
   }else{
     projState.elapsed+=Date.now()-projState.startedAt;
-    projState.startedAt=0; cancelAnimationFrame(projRaf);
+    projState.startedAt=0;cancelAnimationFrame(projRaf);
   }
   localStorage.setItem("proj_"+currentProject,JSON.stringify(projState));
 };
@@ -359,6 +386,7 @@ fileInput.onchange=e=>{
       const [k,v]=l.split(",");
       localStorage.setItem(k,v);
     });
+    updateToday();
     alert("Імпортовано");
   };
   r.readAsText(e.target.files[0]);
