@@ -6,80 +6,123 @@
 <title>Work Time</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000000">
 
 <style>
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, system-ui;
-  background: #000;
-  color: #fff;
-  text-align: center;
+:root {
+  --bg: #000;
+  --card: rgba(28,28,30,0.78);
+  --card-solid: #1c1c1e;
+  --accent: #0A84FF;
+  --accent-soft: #1C3A5E;
+  --text: #fff;
+  --subtext: #8E8E93;
+  --radius: 18px;
 }
 
-.hidden { display: none; }
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
 
-/* ===== TOP ===== */
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui;
+}
+
+/* ===== TOP BAR ===== */
 .top {
-  padding: 12px;
-  border-bottom: 1px solid #1c1c1e;
+  padding: 14px 16px;
+  display: flex;
+  gap: 10px;
+  backdrop-filter: blur(20px);
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.85),
+    rgba(0,0,0,0.55)
+  );
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
 }
 
 .btn {
-  display: inline-block;
-  padding: 10px 14px;
-  margin: 6px;
-  border-radius: 12px;
-  background: #1c1c1e;
-  color: #0a84ff;
+  flex: 1;
+  text-align: center;
+  padding: 12px 0;
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--accent);
   font-size: 15px;
+  font-weight: 500;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
 
-.btn:active { background: #2c2c2e; }
+.btn:active {
+  background: rgba(44,44,46,0.9);
+  transform: scale(0.97);
+}
 
 /* ===== PROJECTS ===== */
 .projects {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 16px;
+  gap: 14px;
+  padding: 18px 16px 10px;
 }
 
 .project {
-  padding: 18px;
-  border-radius: 14px;
-  background: #1c1c1e;
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius);
+  padding: 22px 0;
+  text-align: center;
   font-size: 18px;
+  font-weight: 600;
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 
-.project:active { background: #2c2c2e; }
+.project:active {
+  transform: scale(0.96);
+  background: rgba(44,44,46,0.9);
+}
 
 /* ===== ASSIGN ===== */
 .assign {
-  padding: 8px 16px;
+  display: flex;
+  gap: 12px;
+  padding: 6px 16px 14px;
 }
 
 /* ===== TIMER ===== */
 .timer-wrap {
   display: flex;
   justify-content: center;
-  margin-top: 30px;
+  margin: 36px 0 60px;
 }
 
 .timer {
   width: 260px;
   height: 260px;
   border-radius: 50%;
-  background: #1c1c1e;
+  background: var(--card);
+  backdrop-filter: blur(30px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 42px;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: background 0.25s ease, transform 0.15s ease;
 }
 
 .timer.active {
-  background: #1c2a3a;
+  background: var(--accent-soft);
+}
+
+.timer:active {
+  transform: scale(0.96);
 }
 
 input[type="file"] { display: none; }
@@ -87,38 +130,38 @@ input[type="file"] { display: none; }
 </head>
 <body>
 
-<!-- ===== TOP ===== -->
+<!-- TOP -->
 <div class="top">
   <div class="btn" id="exportCSV">Експорт CSV</div>
   <div class="btn" id="importCSV">Імпорт CSV</div>
   <input type="file" id="fileInput" accept=".csv">
 </div>
 
-<!-- ===== PROJECTS ===== -->
+<!-- PROJECTS -->
 <div class="projects">
   <div class="project" onclick="openProject('crypto')">Crypto</div>
   <div class="project" onclick="openProject('uapp')">UAPP</div>
 </div>
 
-<!-- ===== ASSIGN ===== -->
+<!-- ASSIGN -->
 <div class="assign">
   <div class="btn" onclick="assignTime('crypto')">Зачислити в Crypto</div>
   <div class="btn" onclick="assignTime('uapp')">Зачислити в UAPP</div>
 </div>
 
-<!-- ===== TIMER ===== -->
+<!-- TIMER -->
 <div class="timer-wrap">
   <div id="timer" class="timer">00:00:00</div>
 </div>
 
 <script>
-/* ===== STATE ===== */
 let running = false;
 let startAt = 0;
 let elapsed = Number(localStorage.getItem("elapsed")) || 0;
 let raf;
 
-/* ===== FORMAT ===== */
+const timer = document.getElementById("timer");
+
 function fmt(ms) {
   const s = Math.floor(ms / 1000);
   const h = String(Math.floor(s / 3600)).padStart(2,"0");
@@ -127,15 +170,11 @@ function fmt(ms) {
   return `${h}:${m}:${sec}`;
 }
 
-/* ===== RENDER ===== */
 function render() {
   const now = running ? elapsed + (Date.now() - startAt) : elapsed;
   timer.textContent = fmt(now);
   if (running) raf = requestAnimationFrame(render);
 }
-
-/* ===== TIMER LOGIC ===== */
-const timer = document.getElementById("timer");
 
 timer.onclick = () => {
   running = !running;
@@ -151,7 +190,6 @@ timer.onclick = () => {
   }
 };
 
-/* ===== ASSIGN ===== */
 function assignTime(project) {
   const key = `${project}_${new Date().toISOString().slice(0,10)}`;
   const prev = Number(localStorage.getItem(key)) || 0;
@@ -159,19 +197,15 @@ function assignTime(project) {
 
   elapsed = 0;
   localStorage.setItem("elapsed", 0);
-  timer.textContent = "00:00:00";
-  timer.classList.remove("active");
   running = false;
-
-  alert(`Зачислено в ${project.toUpperCase()}`);
+  timer.classList.remove("active");
+  timer.textContent = "00:00:00";
 }
 
-/* ===== PROJECT PAGE (stub) ===== */
 function openProject(name) {
-  alert(`Проєкт: ${name.toUpperCase()} (аналітика буде далі)`);
+  alert(`Проєкт ${name.toUpperCase()} — аналітика буде далі`);
 }
 
-/* ===== CSV ===== */
 document.getElementById("exportCSV").onclick = () => {
   let csv = "project,date,ms\n";
   Object.keys(localStorage)
@@ -203,7 +237,6 @@ fileInput.onchange = e => {
   r.readAsText(e.target.files[0]);
 };
 
-/* ===== INIT ===== */
 timer.textContent = fmt(elapsed);
 </script>
 </body>
