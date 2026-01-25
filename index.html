@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Work Time Pro</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,10 +29,10 @@ body{
   color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
   user-select: none;
+  overflow-x: hidden;
 }
 .hidden{display:none}
 
-/* ОБЩИЕ СТИЛИ */
 .btn,.card,.timer,.day,.adjust, .input-card{
   background:var(--glass);
   backdrop-filter:blur(26px);
@@ -48,7 +48,7 @@ body{
   display: flex;
   align-items: center;
   justify-content: center;
-  white-space: nowrap; /* ФИКС: Текст всегда в одну строку */
+  white-space: nowrap;
 }
 .btn:active,.adjust:active{transform:scale(.95)}
 .btn.disabled{opacity:.35;pointer-events:none}
@@ -56,170 +56,112 @@ body{
 
 .card{padding:18px}
 
-.top{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  padding:14px;
+/* КОНТЕКСТНОЕ МЕНЮ iOS */
+#contextMenu {
+    position: fixed;
+    z-index: 2000;
+    min-width: 180px;
+    background: rgba(44, 44, 46, 0.9);
+    backdrop-filter: blur(20px);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    transform: scale(0);
+    transform-origin: top left;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.header{
+#contextMenu.visible { transform: scale(1); }
+.menu-item {
+    padding: 14px 18px;
+    font-size: 17px;
+    color: #fff;
     display: flex;
     justify-content: space-between;
-    padding: 14px;
-    gap: 12px;
+    align-items: center;
 }
+.menu-item:active { background: rgba(255,255,255,0.1); }
+.menu-item.danger { color: var(--danger); }
+
+/* ЭКРАНЫ */
+.top{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }
+.header{ display: flex; justify-content: space-between; padding: 14px; gap: 12px; }
 .header .btn { flex: 1; }
 
-.projects{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-  padding:6px 14px;
-}
+.projects{ display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:6px 14px; }
 .project .name{font-size:18px}
-.project .today{
-  margin-top:6px;
-  font-size:13px;
-  color:var(--sub);
-}
+.project .today{ margin-top:6px; font-size:13px; color:var(--sub); }
 
-.assign{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  padding:14px;
-}
+.assign{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }
 
-.timer-wrap{
-  display:flex;
-  justify-content:center;
-  margin:30px 0 16px;
-}
+.timer-wrap{ display:flex; justify-content:center; margin:30px 0 16px; }
 .timer{
-  width:260px;
-  height:260px;
-  border-radius:50%;
-  position:relative;
-  overflow:hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:40px;
-  font-weight:600;
+  width:260px; height:260px; border-radius:50%; position:relative; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:600;
 }
 .timer.active{
-  background:rgba(10,132,255,.25);
-  border-color:rgba(10,132,255,.55);
+  background:rgba(10,132,255,.25); border-color:rgba(10,132,255,.55);
   box-shadow:0 0 40px rgba(10,132,255,.35);
 }
 .timer .time{z-index:2}
 
 .wave{
-  position:absolute;
-  left:-50%;
-  top:0;
-  width:200%;
-  height:200%;
+  position:absolute; left:-50%; top:0; width:200%; height:200%;
   background:linear-gradient(90deg, rgba(10,132,255,.35), rgba(10,132,255,.15), rgba(10,132,255,.35));
-  border-radius:45%;
-  opacity:0;
+  border-radius:45%; opacity:0;
 }
-.timer.active .wave{
-  opacity:1;
-  animation:wave 8s linear infinite;
-}
-@keyframes wave{
-  from{transform:translateX(-25%) rotate(0deg)}
-  to{transform:translateX(25%) rotate(360deg)}
-}
+.timer.active .wave{ opacity:1; animation:wave 8s linear infinite; }
+@keyframes wave{ from{transform:translateX(-25%) rotate(0deg)} to{transform:translateX(25%) rotate(360deg)} }
 
-.time-adjust{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin:12px 0 18px;
-}
+.time-adjust{ display:flex; justify-content:center; gap:12px; margin:12px 0 18px; }
 .adjust{
-  width:52px;
-  height:52px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:var(--accent);
-  font-size:15px;
+  width:52px; height:52px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; color:var(--accent); font-size:15px;
 }
 
-.days{
-  padding:14px;
-  display:grid;
-  gap:10px;
-}
-.day{
-  display:flex;
-  justify-content:space-between;
-  padding:16px 14px;
-  font-size:15px;
-}
-.day .status-text { font-size: 11px; opacity: 0.6; color: var(--accent); }
+.days{ padding:14px; display:grid; gap:10px; }
+.day{ display:flex; justify-content:space-between; padding:16px 14px; font-size:15px; transition: transform 0.1s; }
+.day:active { transform: scale(0.98); background: var(--glass-light); }
 
-.edit-container {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-.edit-label {
-    color: var(--sub);
-    font-size: 14px;
-    margin-bottom: 8px;
-    padding-left: 10px;
-}
+.edit-container { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+.edit-label { color: var(--sub); font-size: 14px; margin-bottom: 8px; padding-left: 10px; }
 .input-card { padding: 15px; }
 input.time-input {
     background: transparent; border: none; color: #fff;
     font-size: 32px; width: 100%; text-align: center; outline: none;
 }
 
-.secondary-list{
-  padding:14px;
-  display:grid;
-  gap:14px;
-}
-.plus{
-  background:var(--glass-light);
-  font-size:28px;
-  text-align:center;
-  padding:22px 0;
-  color:#aaa;
-}
+.secondary-list{ padding:14px; display:grid; gap:14px; }
+.plus{ background:var(--glass-light); font-size:28px; text-align:center; padding:22px 0; color:#aaa; }
 .bottom{padding:14px}
 input[type=file]{display:none}
 </style>
 </head>
 
-<body>
+<body onclick="hideMenu()">
+
+<div id="contextMenu">
+    <div class="menu-item" id="menuAction">Редагувати</div>
+</div>
 
 <div id="home">
   <div class="top">
-    <div class="btn" onclick="exportCSV()">Экспорт CSV</div>
-    <div class="btn" onclick="importCSV()">Импорт CSV</div>
+    <div class="btn" onclick="exportCSV()">Експорт CSV</div>
+    <div class="btn" onclick="importCSV()">Імпорт CSV</div>
     <input type="file" id="fileInput">
   </div>
   <div class="projects">
     <div class="card project" onclick="openMainProject('Crypto')">
       <div class="name">Crypto</div>
-      <div class="today" id="today_crypto">Сегодня 00:00:00</div>
+      <div class="today" id="today_crypto">Сьогодні 00:00:00</div>
     </div>
     <div class="card project" onclick="openMainProject('UAPP')">
       <div class="name">UAPP</div>
-      <div class="today" id="today_uapp">Сегодня 00:00:00</div>
+      <div class="today" id="today_uapp">Сьогодні 00:00:00</div>
     </div>
   </div>
   <div class="assign">
-    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислить в Crypto</div>
-    <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислить в UAPP</div>
+    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
+    <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
   </div>
   <div class="timer-wrap">
     <div id="mainTimer" class="timer">
@@ -234,29 +176,22 @@ input[type=file]{display:none}
     <div class="adjust" onclick="adjustMain(600000)">+10</div>
   </div>
   <div class="bottom">
-    <div class="btn" onclick="openSecondary()">Проекты</div>
+    <div class="btn" onclick="openSecondary()">Проєкти</div>
   </div>
 </div>
 
 <div id="projectsView" class="hidden">
-  <div class="header">
-    <div class="btn" onclick="goHome()">← Назад</div>
-  </div>
-  <div class="secondary-list" id="secondaryList">
-    <div class="card plus" onclick="addSecondary()">＋</div>
-  </div>
+  <div class="header"><div class="btn" onclick="goHome()">← Назад</div></div>
+  <div class="secondary-list" id="secondaryList"><div class="card plus" onclick="addSecondary()">＋</div></div>
 </div>
 
 <div id="projectView" class="hidden">
   <div class="header">
     <div class="btn" onclick="backFromProject()">← Назад</div>
-    <div class="btn danger" onclick="openTrash()">🗑 Корзина</div>
+    <div class="btn danger" onclick="openTrash()">🗑 Кошик</div>
   </div>
   <div class="timer-wrap">
-    <div id="projectTimer" class="timer">
-      <div class="wave"></div>
-      <span class="time">00:00:00</span>
-    </div>
+    <div id="projectTimer" class="timer"><div class="wave"></div><span class="time">00:00:00</span></div>
   </div>
   <div class="time-adjust">
     <div class="adjust" onclick="adjustProject(-600000)">-10</div>
@@ -268,33 +203,29 @@ input[type=file]{display:none}
 </div>
 
 <div id="trashView" class="hidden">
-    <div class="header">
-        <div class="btn" onclick="showView('projectView')">← Назад</div>
-    </div>
+    <div class="header"><div class="btn" onclick="showView('projectView')">← Назад</div></div>
     <div class="edit-container">
-        <div class="edit-label">Корзина (зажмите для восстановления)</div>
+        <div class="edit-label">Кошик (затисніть для відновлення)</div>
         <div class="days" id="trashList"></div>
     </div>
 </div>
 
 <div id="editView" class="hidden">
     <div class="header">
-        <div class="btn" onclick="closeEdit()">← Отмена</div>
-        <div class="btn" onclick="saveEdit()">Сохранить</div>
+        <div class="btn" onclick="closeEdit()">← Скасувати</div>
+        <div class="btn" onclick="saveEdit()">Зберегти</div>
     </div>
     <div class="edit-container">
         <div>
             <div class="edit-label" id="editDateLabel">Дата</div>
-            <div class="input-card">
-                <input type="text" id="editTimeInput" class="time-input">
-            </div>
+            <div class="input-card"><input type="text" id="editTimeInput" class="time-input"></div>
         </div>
-        <div class="btn danger" onclick="moveToTrash()">Удалить в корзину</div>
+        <div class="btn danger" onclick="moveToTrash()">Видалити в кошик</div>
     </div>
 </div>
 
 <script>
-const daysRU=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
   const s=Math.floor(Math.abs(t)/1000);
   return String(Math.floor(s/3600)).padStart(2,"0")+":"+
@@ -308,7 +239,7 @@ const parseFmt = s => {
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
-/* ГЛАВНЫЙ ТАЙМЕР */
+/* ТАЙМЕРЫ */
 let main={t:+localStorage.main_total||0, s:+localStorage.main_start||0, run:false};
 const mainTimer=document.getElementById("mainTimer");
 if(main.s){ main.run=true; mainTimer.classList.add("active"); }
@@ -345,7 +276,7 @@ function updateAssign(){
 function updateToday(){
   ["Crypto","UAPP"].forEach(p=>{
     const el=document.getElementById("today_"+p.toLowerCase());
-    if(el)el.textContent="Сегодня "+fmt(+localStorage[k("main",p)]||0);
+    if(el)el.textContent="Сьогодні "+fmt(+localStorage[k("main",p)]||0);
   });
 }
 tickMain(); updateToday();
@@ -371,11 +302,10 @@ function renderSecondary(){
   });
 }
 function addSecondary(){
-  const n=prompt("Название проекта"); if(!n)return;
+  const n=prompt("Назва проєкту"); if(!n)return;
   const l=getSec(); l.unshift(n); saveSec(l); renderSecondary();
 }
 
-/* ТАЙМЕР ВНУТРИ ПРОЕКТА */
 let proj={run:false,t:0,s:0};
 const projectTimer=document.getElementById("projectTimer");
 function loadProj(){
@@ -411,14 +341,33 @@ function adjustProject(d){
 function openMainProject(n){mode="main";cur=n;showView('projectView');loadProj()}
 function openSecondaryProject(n){mode="secondary";cur=n;showView('projectView');loadProj()}
 
-/* РЕДАКТИРОВАНИЕ И ДОЛГОЕ НАЖАТИЕ */
-let pressTimer;
-function dayTouchStart(key, isTrash=false){ pressTimer=setTimeout(()=>isTrash?restoreDay(key):openEditDay(key),700); }
+/* КОНТЕКСТНОЕ МЕНЮ И LONG PRESS */
+let pressTimer, lastX, lastY;
+const menu = document.getElementById('contextMenu');
+
+function dayTouchStart(e, key, isTrash=false){
+    const touch = e.touches ? e.touches[0] : e;
+    lastX = touch.clientX; lastY = touch.clientY;
+    pressTimer = setTimeout(() => showContextMenu(key, isTrash), 700);
+}
 function dayTouchEnd(){ clearTimeout(pressTimer); }
+
+function showContextMenu(key, isTrash){
+    const menuAction = document.getElementById('menuAction');
+    menuAction.textContent = isTrash ? "Відновити" : "Редагувати";
+    menuAction.onclick = () => { isTrash ? restoreDay(key) : openEditDay(key); hideMenu(); };
+    
+    // Позиционирование
+    menu.style.left = Math.min(window.innerWidth - 190, lastX) + 'px';
+    menu.style.top = Math.min(window.innerHeight - 60, lastY) + 'px';
+    menu.classList.add('visible');
+}
+
+function hideMenu(){ menu.classList.remove('visible'); }
 
 function openEditDay(key){
     editingKey=key;
-    document.getElementById('editDateLabel').textContent="Редактирование: "+key.split('_')[2];
+    document.getElementById('editDateLabel').textContent="Редагування: "+key.split('_')[2];
     document.getElementById('editTimeInput').value=fmt(+localStorage[key]||0);
     showView('editView');
 }
@@ -444,9 +393,9 @@ function renderTrash(){
     Object.keys(localStorage).filter(k=>k.startsWith(prefix)).sort().reverse().forEach(key=>{
         const d=key.split("_")[3];
         const row=document.createElement("div"); row.className="day";
-        row.innerHTML=`<span>${d}</span><span class="status-text">Зажмите для восстановления</span><span>${fmt(+localStorage[key])}</span>`;
-        row.onmousedown=()=>dayTouchStart(key, true); row.onmouseup=dayTouchEnd;
-        row.ontouchstart=()=>dayTouchStart(key, true); row.ontouchend=dayTouchEnd;
+        row.innerHTML=`<span>${d}</span><span>${fmt(+localStorage[key])}</span>`;
+        row.onmousedown=(e)=>dayTouchStart(e, key, true); row.onmouseup=dayTouchEnd;
+        row.ontouchstart=(e)=>dayTouchStart(e, key, true); row.ontouchend=dayTouchEnd;
         list.appendChild(row);
     });
 }
@@ -456,7 +405,6 @@ function restoreDay(trashKey){
     localStorage.removeItem(trashKey);
     if(originalKey.endsWith(dayKey())){ proj.t=+localStorage[originalKey]; localStorage[`proj_${mode}_${cur}_total`]=proj.t; }
     renderTrash(); loadDays(); updateToday();
-    alert("Запись восстановлена!");
 }
 
 /* СПИСОК ДНЕЙ */
@@ -466,14 +414,14 @@ function loadDays(){
   Object.keys(localStorage).filter(k=>k.startsWith(prefix)).sort().reverse().forEach(key=>{
       const d=key.split("_")[2]; const D=new Date(d);
       const row=document.createElement("div"); row.className="day";
-      row.innerHTML=`<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysRU[D.getDay()]}</span><span class="status-text">Редактировать</span><span>${fmt(+localStorage[key])}</span>`;
-      row.onmousedown=()=>dayTouchStart(key); row.onmouseup=dayTouchEnd;
-      row.ontouchstart=()=>dayTouchStart(key); row.ontouchend=dayTouchEnd;
+      row.innerHTML=`<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span><span>${fmt(+localStorage[key])}</span>`;
+      row.onmousedown=(e)=>dayTouchStart(e, key); row.onmouseup=dayTouchEnd;
+      row.ontouchstart=(e)=>dayTouchStart(e, key); row.ontouchend=dayTouchEnd;
       list.appendChild(row);
   });
 }
 
-/* ИМПОРТ/ЭКСПОРТ */
+/* CSV */
 function exportCSV(){
   let c=""; Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c]));
