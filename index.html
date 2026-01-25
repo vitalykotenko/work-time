@@ -244,8 +244,9 @@ input[type=file]{display:none}
 
 <!-- PROJECT -->
 <div id="projectView" class="hidden">
-  <div class="header">
+  <div class="header" style="display:flex;justify-content:space-between;gap:12px">
     <div class="btn" onclick="backFromProject()">← Назад</div>
+    <div class="btn" onclick="openTrash()">Корзина</div>
   </div>
   <div class="timer-wrap">
     <div id="projectTimer" class="timer">
@@ -357,6 +358,7 @@ updateToday();
 
 /* NAV */
 let mode=null,cur=null;
+let selectedDayKey = null;
 const home=document.getElementById("home");
 const projectsView=document.getElementById("projectsView");
 const projectView=document.getElementById("projectView");
@@ -467,11 +469,24 @@ function loadDays(){
          <span>${fmt(+localStorage[k])}</span>`;
 
       // ВЫДЕЛЕНИЕ СТРОКИ ПРИ КЛИКЕ
-      row.onclick = () => {
-        document.querySelectorAll(".day")
-          .forEach(x => x.classList.remove("active"));
-        row.classList.add("active");
-      };
+     let pressTimer;
+
+row.addEventListener("touchstart", () => {
+  pressTimer = setTimeout(() => {
+    selectedDayKey = k; // запоминаем ключ дня
+    openDayEditor();
+  }, 500); // долгий тап
+});
+
+row.addEventListener("touchend", () => {
+  clearTimeout(pressTimer);
+});
+
+row.onclick = () => {
+  document.querySelectorAll(".day")
+    .forEach(x => x.classList.remove("active"));
+  row.classList.add("active");
+};
 
       daysList.appendChild(row);
     });
@@ -498,7 +513,141 @@ fileInput.onchange=e=>{
   };
   r.readAsText(e.target.files[0]);
 };
+/* DAY EDIT LOGIC */
+const dayEditView = document.getElementById("dayEditView");
+
+function openDayEditor(){
+  projectView.classList.add("hidden");
+  dayEditView.classList.remove("hidden");
+
+  const val = +localStorage[selectedDayKey] || 0;
+  document.getElementById("dayTimeInput").value = fmt(val);
+}
+
+function closeDayEditor(){
+  dayEditView.classList.add("hidden");
+  projectView.classList.remove("hidden");
+}
+
+function saveDayEdit(){
+  const v = document.getElementById("dayTimeInput").value.trim();
+  const p = v.split(":").map(Number);
+  if(p.length !== 3) return;
+
+  const ms = ((p[0]*3600)+(p[1]*60)+p[2]) * 1000;
+  localStorage[selectedDayKey] = ms;
+
+  closeDayEditor();
+  loadDays();
+  updateToday();
+}
+
+function deleteDay(){
+  const trash = JSON.parse(localStorage.deletedDays || "[]");
+  trash.push({
+    key: selectedDayKey,
+    value: localStorage[selectedDayKey],
+    deletedAt: Date.now()
+  });
+  localStorage.deletedDays = JSON.stringify(trash);
+
+  delete localStorage[selectedDayKey];
+
+  closeDayEditor();
+  loadDays();
+  updateToday();
+}
+
+/* TRASH LOGIC */
+const trashView = document.getElementById("trashView");
+const trashList = document.getElementById("trashList");
+
+function openTrash(){
+  projectView.classList.add("hidden");
+  trashView.classList.remove("hidden");
+  renderTrash();
+}
+
+function closeTrash(){
+  trashView.classList.add("hidden");
+  projectView.classList.remove("hidden");
+}
+
+function renderTrash(){
+  trashList.innerHTML = "";
+
+  const trash = JSON.parse(localStorage.deletedDays || "[]");
+
+  if(!trash.length){
+    trashList.innerHTML =
+      '<div class="day" style="opacity:.5">Порожньо</div>';
+    return;
+  }
+
+  trash
+    .slice()
+    .reverse()
+    .forEach((item, i) => {
+      const d = document.createElement("div");
+      d.className = "day";
+      d.innerHTML = `
+        <span>${item.key.split("_")[2]}</span>
+        <span>${fmt(+item.value || 0)}</span>
+      `;
+      d.onclick = () => restoreFromTrash(i);
+      trashList.appendChild(d);
+    });
+}
+
+function restoreFromTrash(index){
+  const trash = JSON.parse(localStorage.deletedDays || "[]");
+  const item = trash.splice(trash.length - 1 - index, 1)[0];
+
+  localStorage[item.key] = item.value;
+  localStorage.deletedDays = JSON.stringify(trash);
+
+  renderTrash();
+  loadDays();
+  updateToday();
+}
+
 </script>
+  
+<!-- DAY EDIT -->
+<div id="dayEditView" class="hidden">
+  <div class="header">
+    <div class="btn" onclick="closeDayEditor()">← Назад</div>
+  </div>
+
+  <div class="card" style="margin:14px">
+    <div style="margin-bottom:10px;color:var(--sub)">Час за день</div>
+    <input id="dayTimeInput"
+      style="
+        width:100%;
+        padding:14px;
+        border-radius:14px;
+        background:#000;
+        color:#fff;
+        border:1px solid var(--stroke);
+        font-size:18px
+      "
+      placeholder="00:00:00">
+  </div>
+
+  <div class="bottom">
+    <div class="btn" onclick="saveDayEdit()">Зберегти</div>
+    <div class="btn" style="color:#ff453a" onclick="deleteDay()">Видалити</div>
+  </div>
+</div>
+
+<!-- TRASH -->
+<div id="trashView" class="hidden">
+  <div class="header">
+    <div class="btn" onclick="closeTrash()">← Назад</div>
+  </div>
+
+  <div class="days" id="trashList"></div>
+</div>
 
 </body>
 </html>
