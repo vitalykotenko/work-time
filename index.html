@@ -2,8 +2,8 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Work Time</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Work Time Pro</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,10 +15,9 @@
   --glass:rgba(28,28,30,.72);
   --glass-light:rgba(58,58,60,.55);
   --stroke:rgba(255,255,255,.18);
-  --stroke-soft:rgba(255,255,255,.08);
   --accent:#0A84FF;
   --radius:22px;
-  --sub:#8E8E93;
+  --red:#ff453a;
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -27,637 +26,196 @@ body{
   background:var(--bg);
   color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
+  padding-bottom: 40px;
 }
-.hidden{display:none}
+.hidden{display:none !important}
 
-/* COMMON */
-.btn,.card,.timer,.day,.adjust{
+.btn,.card,.day{
   background:var(--glass);
   backdrop-filter:blur(26px);
+  -webkit-backdrop-filter:blur(26px);
   border-radius:var(--radius);
   border:1px solid var(--stroke);
-  box-shadow:inset 0 0 0 1px var(--stroke-soft);
 }
-.btn{
-  padding:14px;
+.btn{padding:14px;text-align:center;color:var(--accent);font-weight:600;cursor:pointer;margin-bottom:10px}
+.btn:active{opacity:0.7}
+
+.days{padding:14px;display:grid;gap:10px}
+.day{display:flex;justify-content:space-between;padding:16px;transition:background 0.2s}
+.day.active{background:rgba(10,132,255,0.2);border-color:var(--accent)}
+
+.header{padding:20px 14px 10px;display:flex;justify-content:space-between;align-items:center}
+.view-title{font-size:24px;font-weight:bold}
+
+input{
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--stroke);
+  border-radius:12px;
+  color:#fff;
+  font-size:18px;
   text-align:center;
-  color:var(--accent);
-  font-size:16px;
-  white-space:nowrap; /* ВАЖНО — фикс переноса */
+  outline:none;
 }
-.btn:active,.adjust:active{transform:scale(.95)}
-.btn.disabled{opacity:.35;pointer-events:none}
-.card{padding:18px}
-
-/* TOP */
-.top{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  padding:14px;
-}
-
-/* HOME PROJECTS */
-.projects{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-  padding:6px 14px;
-}
-.project .name{font-size:18px}
-.project .today{
-  margin-top:6px;
-  font-size:13px;
-  color:var(--sub);
-}
-
-/* ASSIGN */
-.assign{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  padding:14px;
-}
-
-/* TIMER */
-.timer-wrap{
-  display:flex;
-  justify-content:center;
-  margin:30px 0 16px;
-}
-.timer{
-  width:260px;
-  height:260px;
-  border-radius:50%;
-  position:relative;
-  overflow:hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:40px;
-  font-weight:600;
-}
-.timer.active{
-  background:rgba(10,132,255,.25);
-  border-color:rgba(10,132,255,.55);
-  box-shadow:0 0 40px rgba(10,132,255,.35);
-}
-.timer .time{z-index:2}
-
-/* WAVE */
-.wave{
-  position:absolute;
-  left:-50%;
-  top:0;
-  width:200%;
-  height:200%;
-  background:linear-gradient(
-    90deg,
-    rgba(10,132,255,.35),
-    rgba(10,132,255,.15),
-    rgba(10,132,255,.35)
-  );
-  border-radius:45%;
-  opacity:0;
-}
-.timer.active .wave{
-  opacity:1;
-  animation:wave 8s linear infinite;
-}
-@keyframes wave{
-  from{transform:translateX(-25%) rotate(0deg)}
-  to{transform:translateX(25%) rotate(360deg)}
-}
-
-/* TIME ADJUST */
-.time-adjust{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin:12px 0 18px;
-}
-.adjust{
-  width:52px;
-  height:52px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:var(--accent);
-  font-size:15px;
-}
-
-/* DAYS */
-.days{
-  padding:14px;
-  display:grid;
-  gap:10px;
-}
-.day{
-  display:flex;
-  justify-content:space-between;
-  padding:12px 14px;
-  font-size:15px;
-}
-.day.active{
-  background:rgba(10,132,255,.18);
-  border-color:rgba(10,132,255,.55);
-}
-
-/* HEADER */
-.header{padding:14px}
-
-/* SECONDARY */
-.secondary-list{
-  padding:14px;
-  display:grid;
-  gap:14px;
-}
-.plus{
-  background:var(--glass-light);
-  font-size:28px;
-  text-align:center;
-  padding:22px 0;
-  color:#aaa;
-}
-
-/* BOTTOM */
-.bottom{padding:14px}
-input[type=file]{display:none}
 </style>
 </head>
 
 <body>
 
-<!-- HOME -->
-<div id="home">
-  <div class="top">
-    <div class="btn" onclick="exportCSV()">Експорт CSV</div>
-    <div class="btn" onclick="importCSV()">Імпорт CSV</div>
-    <input type="file" id="fileInput">
-  </div>
-
-  <div class="projects">
-    <div class="card project" onclick="openMainProject('Crypto')">
-      <div class="name">Crypto</div>
-      <div class="today" id="today_crypto">Сьогодні 00:00:00</div>
-    </div>
-    <div class="card project" onclick="openMainProject('UAPP')">
-      <div class="name">UAPP</div>
-      <div class="today" id="today_uapp">Сьогодні 00:00:00</div>
-    </div>
-  </div>
-
-  <div class="assign">
-    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
-    <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
-  </div>
-
-  <div class="timer-wrap">
-    <div id="mainTimer" class="timer">
-      <div class="wave"></div>
-      <span class="time">00:00:00</span>
-    </div>
-  </div>
-
-  <div class="time-adjust">
-    <div class="adjust" onclick="adjustMain(-600000)">-10</div>
-    <div class="adjust" onclick="adjustMain(-60000)">-1</div>
-    <div class="adjust" onclick="adjustMain(60000)">+1</div>
-    <div class="adjust" onclick="adjustMain(600000)">+10</div>
-  </div>
-
-  <div class="bottom">
-    <div class="btn" onclick="openSecondary()">Проєкти</div>
-  </div>
-</div>
-
-<!-- SECONDARY -->
-<div id="projectsView" class="hidden">
+<div id="projectView">
   <div class="header">
-    <div class="btn" onclick="goHome()">← Назад</div>
-  </div>
-  <div class="secondary-list" id="secondaryList">
-    <div class="card plus" onclick="addSecondary()">＋</div>
-  </div>
-</div>
-
-<!-- PROJECT -->
-<div id="projectView" class="hidden">
-  <div class="header" style="display:flex;justify-content:space-between;gap:12px">
-    <div class="btn" onclick="backFromProject()">← Назад</div>
-    <div class="btn" onclick="openTrash()">Корзина</div>
-  </div>
-  <div class="timer-wrap">
-    <div id="projectTimer" class="timer">
-      <div class="wave"></div>
-      <span class="time">00:00:00</span>
-    </div>
-  </div>
-  <div class="time-adjust">
-    <div class="adjust" onclick="adjustProject(-600000)">-10</div>
-    <div class="adjust" onclick="adjustProject(-60000)">-1</div>
-    <div class="adjust" onclick="adjustProject(60000)">+1</div>
-    <div class="adjust" onclick="adjustProject(600000)">+10</div>
+    <div class="view-title">Проекти</div>
+    <div class="btn" style="margin:0;padding:8px 16px" onclick="openTrash()">Кошик</div>
   </div>
   <div class="days" id="daysList"></div>
 </div>
 
-<script>
-/* JS — стабильная версия */
-const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
-const fmt=t=>{
-  const s=Math.floor(t/1000);
-  return String(Math.floor(s/3600)).padStart(2,"0")+":"+
-         String(Math.floor(s%3600/60)).padStart(2,"0")+":"+
-         String(s%60).padStart(2,"0");
-};
-const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
-const k=(t,n)=>`${t}_${n}_${dayKey()}`;
-
-/* MAIN */
-let main = {
-  t: +localStorage.main_total || 0,
-  s: +localStorage.main_start || 0,
-  run: false
-};
-
-const mainTimer = document.getElementById("mainTimer");
-
-// восстановление состояния после reload
-if (main.s) {
-  main.run = true;
-  mainTimer.classList.add("active");
-}
-
-function tickMain(){
-  const v = main.run
-    ? main.t + (Date.now() - main.s)
-    : main.t;
-
-  mainTimer.querySelector(".time").textContent = fmt(v);
-  updateAssign();
-  requestAnimationFrame(tickMain);
-}
-
-mainTimer.onclick = () => {
-  if (main.run) {
-    // STOP
-    main.t += Date.now() - main.s;
-    main.s = 0;
-    main.run = false;
-
-    localStorage.main_start = 0;
-    localStorage.main_total = main.t;
-    mainTimer.classList.remove("active");
-  } else {
-    // START
-    main.s = Date.now();
-    main.run = true;
-
-    localStorage.main_start = main.s;
-    localStorage.main_total = main.t;
-    mainTimer.classList.add("active");
-  }
-};
-
-function adjustMain(d){
-  main.t = Math.max(0, main.t + d);
-  localStorage.main_total = main.t;
-}
-
-function assignMain(p){
-  if (!main.t) return;
-
-  localStorage[k("main", p)] =
-    (+(localStorage[k("main", p)] || 0)) + main.t;
-
-  main = { t: 0, s: 0, run: false };
-  localStorage.main_start = 0;
-  localStorage.main_total = 0;
-
-  mainTimer.classList.remove("active");
-  updateToday();
-}
-
-function updateAssign(){
-  const a = main.t > 0;
-  assignCrypto.classList.toggle("disabled", !a);
-  assignUapp.classList.toggle("disabled", !a);
-}
-
-function updateToday(){
-  ["Crypto","UAPP"].forEach(p=>{
-    document.getElementById("today_"+p.toLowerCase())
-      .textContent = "Сьогодні " + fmt(+localStorage[k("main",p)] || 0);
-  });
-}
-
-tickMain();
-updateToday();
-
-/* NAV */
-let mode=null,cur=null;
-let selectedDayKey = null;
-const home=document.getElementById("home");
-const projectsView=document.getElementById("projectsView");
-const projectView=document.getElementById("projectView");
-
-function openSecondary(){home.classList.add("hidden");projectsView.classList.remove("hidden")}
-function goHome(){projectsView.classList.add("hidden");projectView.classList.add("hidden");home.classList.remove("hidden")}
-function backFromProject(){projectView.classList.add("hidden");mode==="secondary"?projectsView.classList.remove("hidden"):goHome()}
-
-/* SECONDARY */
-const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
-const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
-function renderSecondary(){
-  secondaryList.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
-  getSec().forEach(n=>{
-    const d=document.createElement("div");
-    d.className="card";d.textContent=n;
-    d.onclick=()=>openSecondaryProject(n);
-    secondaryList.appendChild(d);
-  });
-}
-function addSecondary(){
-  const n=prompt("Назва проєкту");
-  if(!n)return;
-  const l=getSec();l.unshift(n);saveSec(l);renderSecondary();
-}
-renderSecondary();
-
-/* PROJECT */
-let proj={run:false,t:0,s:0};
-const projectTimer=document.getElementById("projectTimer");
-
-function loadProj(){
-  const base = `proj_${mode}_${cur}`;
-
-  proj.t = +localStorage[base+"_total"] || 0;
-  proj.s = +localStorage[base+"_start"] || 0;
-  proj.run = !!proj.s;
-
-  projectTimer.classList.toggle("active", proj.run);
-  tickProj();
-  loadDays();
-}
-function tickProj(){
-  const v = proj.run
-    ? proj.t + (Date.now() - proj.s)
-    : proj.t;
-
-  projectTimer.querySelector(".time").textContent = fmt(v);
-  requestAnimationFrame(tickProj);
-}
-projectTimer.onclick = () => {
-  const base = `proj_${mode}_${cur}`;
-
-  if (proj.run) {
-    // STOP
-    const delta = Date.now() - proj.s;
-
-    proj.t += delta;
-    proj.s = 0;
-    proj.run = false;
-
-    // 🔥 ДОБАВЛЯЕМ В ДЕНЬ
-    const dayKey = k(mode === "main" ? "main" : "sec", cur);
-    localStorage[dayKey] =
-      (+(localStorage[dayKey] || 0)) + delta;
-
-    localStorage[base + "_start"] = 0;
-    localStorage[base + "_total"] = proj.t;
-
-    loadDays();
-    updateToday();
-  } else {
-    // START
-    proj.s = Date.now();
-    proj.run = true;
-
-    localStorage[base + "_start"] = proj.s;
-    localStorage[base + "_total"] = proj.t;
-  }
-
-  projectTimer.classList.toggle("active", proj.run);
-};
-function adjustProject(d){saveProj(d)}
-function saveProj(d){
-  const key=k(mode==="main"?"main":"sec",cur);
-  localStorage[key]=(+(localStorage[key]||0))+d;
-  proj.t=Math.max(0,proj.t+d);
-  tickProj();loadDays();updateToday();
-}
-function openMainProject(n){mode="main";cur=n;home.classList.add("hidden");projectView.classList.remove("hidden");loadProj()}
-function openSecondaryProject(n){mode="secondary";cur=n;projectsView.classList.add("hidden");projectView.classList.remove("hidden");loadProj()}
-
-/* DAYS */
-function loadDays(){
-  daysList.innerHTML="";
-  Object.keys(localStorage)
-    .filter(k => k.startsWith((mode==="main" ? "main_" : "sec_") + cur + "_"))
-    .sort()
-    .reverse()
-    .forEach(k => {
-      const d = k.split("_")[2];
-      const D = new Date(d);
-
-      const row = document.createElement("div");
-      row.className = "day";
-      row.innerHTML =
-        `<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span>
-         <span>${fmt(+localStorage[k])}</span>`;
-
-      // ВЫДЕЛЕНИЕ СТРОКИ ПРИ КЛИКЕ
-     let pressTimer;
-      let longPress = false;
-
-row.addEventListener("touchstart", () => {
-  longPress = false;
-
-  pressTimer = setTimeout(() => {
-    longPress = true;
-    selectedDayKey = k;
-    openDayEditor();
-  }, 500);
-});
-
-row.addEventListener("touchend", () => {
-  clearTimeout(pressTimer);
-});
-
-row.addEventListener("touchcancel", () => {
-  clearTimeout(pressTimer);
-});
-
-row.onclick = () => {
-  if (longPress) return;
-
-  document.querySelectorAll(".day")
-    .forEach(x => x.classList.remove("active"));
-  row.classList.add("active");
-};
-
-      daysList.appendChild(row);
-    });
-}
-
-/* CSV */
-function exportCSV(){
-  let c="";
-  Object.keys(localStorage).forEach(k=>c+=k+","+localStorage[k]+"\n");
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([c]));
-  a.download="work-time.csv";
-  a.click();
-}
-function importCSV(){fileInput.click()}
-fileInput.onchange=e=>{
-  const r=new FileReader();
-  r.onload=()=>{
-    r.result.split("\n").forEach(l=>{
-      const [k,v]=l.split(",");
-      if(k)localStorage[k]=v;
-    });
-    location.reload();
-  };
-  r.readAsText(e.target.files[0]);
-};
-/* DAY EDIT LOGIC */
-const dayEditView = document.getElementById("dayEditView");
-
-function openDayEditor(){
-  projectView.classList.add("hidden");
-  dayEditView.classList.remove("hidden");
-
-  const val = +localStorage[selectedDayKey] || 0;
-  document.getElementById("dayTimeInput").value = fmt(val);
-}
-
-function closeDayEditor(){
-  dayEditView.classList.add("hidden");
-  projectView.classList.remove("hidden");
-}
-
-function saveDayEdit(){
-  const v = document.getElementById("dayTimeInput").value.trim();
-  const p = v.split(":").map(Number);
-  if(p.length !== 3) return;
-
-  const ms = ((p[0]*3600)+(p[1]*60)+p[2]) * 1000;
-  localStorage[selectedDayKey] = ms;
-
-  closeDayEditor();
-  loadDays();
-  updateToday();
-}
-
-function deleteDay(){
-  const trash = JSON.parse(localStorage.deletedDays || "[]");
-  trash.push({
-    key: selectedDayKey,
-    value: localStorage[selectedDayKey],
-    deletedAt: Date.now()
-  });
-  localStorage.deletedDays = JSON.stringify(trash);
-
-  delete localStorage[selectedDayKey];
-
-  closeDayEditor();
-  loadDays();
-  updateToday();
-}
-
-/* TRASH LOGIC */
-const trashView = document.getElementById("trashView");
-const trashList = document.getElementById("trashList");
-
-function openTrash(){
-  projectView.classList.add("hidden");
-  trashView.classList.remove("hidden");
-  renderTrash();
-}
-
-function closeTrash(){
-  trashView.classList.add("hidden");
-  projectView.classList.remove("hidden");
-}
-
-function renderTrash(){
-  trashList.innerHTML = "";
-
-  const trash = JSON.parse(localStorage.deletedDays || "[]");
-
-  if(!trash.length){
-    trashList.innerHTML =
-      '<div class="day" style="opacity:.5">Порожньо</div>';
-    return;
-  }
-
-  trash
-    .slice()
-    .reverse()
-    .forEach((item, i) => {
-      const d = document.createElement("div");
-      d.className = "day";
-      d.innerHTML = `
-        <span>${item.key.split("_")[2]}</span>
-        <span>${fmt(+item.value || 0)}</span>
-      `;
-      d.onclick = () => restoreFromTrash(i);
-      trashList.appendChild(d);
-    });
-}
-
-function restoreFromTrash(index){
-  const trash = JSON.parse(localStorage.deletedDays || "[]");
-  const item = trash.splice(trash.length - 1 - index, 1)[0];
-
-  localStorage[item.key] = item.value;
-  localStorage.deletedDays = JSON.stringify(trash);
-
-  renderTrash();
-  loadDays();
-  updateToday();
-}
-
-</script>
-  
-<!-- DAY EDIT -->
 <div id="dayEditView" class="hidden">
   <div class="header">
-    <div class="btn" onclick="closeDayEditor()">← Назад</div>
+    <div class="btn" style="margin:0" onclick="closeDayEditor()">← Назад</div>
+    <div class="view-title">Редагувати</div>
   </div>
-
-  <div class="card" style="margin:14px">
-    <div style="margin-bottom:10px;color:var(--sub)">Час за день</div>
-    <input id="dayTimeInput"
-      style="
-        width:100%;
-        padding:14px;
-        border-radius:14px;
-        background:#000;
-        color:#fff;
-        border:1px solid var(--stroke);
-        font-size:18px
-      "
-      placeholder="00:00:00">
+  <div class="card" style="margin:14px;padding:20px">
+    <label style="display:block;margin-bottom:10px;color:#8e8e93">Час (HH:MM:SS)</label>
+    <input id="dayTimeInput" type="text" placeholder="00:00:00" style="width:100%;padding:14px">
   </div>
-
-  <div class="bottom">
-    <div class="btn" onclick="saveDayEdit()">Зберегти</div>
-    <div class="btn" style="color:#ff453a" onclick="deleteDay()">Видалити</div>
+  <div class="bottom" style="padding:14px">
+    <div class="btn" style="background:var(--accent);color:#fff" onclick="saveDayEdit()">Зберегти</div>
+    <div class="btn" style="color:var(--red)" onclick="deleteDay()">Видалити запис</div>
   </div>
 </div>
 
-<!-- TRASH -->
 <div id="trashView" class="hidden">
   <div class="header">
-    <div class="btn" onclick="closeTrash()">← Назад</div>
+    <div class="btn" style="margin:0" onclick="closeTrash()">← Назад</div>
+    <div class="view-title">Кошик</div>
   </div>
-
   <div class="days" id="trashList"></div>
 </div>
+
+<script>
+// Вспомогательные функции
+const fmt = t => {
+  const s = Math.floor(t / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return [h, m, sec].map(v => String(v).padStart(2, "0")).join(":");
+};
+
+const parseTime = str => {
+  const p = str.split(":").map(Number);
+  const h = p[0] || 0, m = p[1] || 0, s = p[2] || 0;
+  return (h * 3600 + m * 60 + s) * 1000;
+};
+
+let selectedDayKey = null;
+let longPressTimer;
+let isLongPress = false;
+
+// Логика списка
+function loadDays() {
+  const list = document.getElementById("daysList");
+  list.innerHTML = "";
+  
+  // Получаем ключи и сортируем их (по дате в ключе day_YYYY-MM-DD)
+  const keys = Object.keys(localStorage)
+    .filter(k => k.startsWith("day_"))
+    .sort((a, b) => b.localeCompare(a));
+
+  keys.forEach(k => {
+    const row = document.createElement("div");
+    row.className = "day";
+    row.innerHTML = `<span>${k.replace("day_", "")}</span><b>${fmt(+localStorage[k])}</b>`;
+
+    // Обработка долгого нажатия для мобилок
+    row.addEventListener("touchstart", () => {
+      isLongPress = false;
+      longPressTimer = setTimeout(() => {
+        isLongPress = true;
+        selectedDayKey = k;
+        openDayEditor();
+      }, 600);
+    });
+
+    row.addEventListener("touchend", () => clearTimeout(longPressTimer));
+
+    row.onclick = () => {
+      if (isLongPress) return;
+      document.querySelectorAll(".day").forEach(d => d.classList.remove("active"));
+      row.classList.add("active");
+    };
+
+    list.appendChild(row);
+  });
+}
+
+// Редактор
+function openDayEditor() {
+  document.getElementById("projectView").classList.add("hidden");
+  document.getElementById("dayEditView").classList.remove("hidden");
+  document.getElementById("dayTimeInput").value = fmt(+localStorage[selectedDayKey] || 0);
+}
+
+function closeDayEditor() {
+  document.getElementById("dayEditView").classList.add("hidden");
+  document.getElementById("projectView").classList.remove("hidden");
+}
+
+function saveDayEdit() {
+  const val = document.getElementById("dayTimeInput").value;
+  localStorage[selectedDayKey] = parseTime(val);
+  closeDayEditor();
+  loadDays();
+}
+
+function deleteDay() {
+  const trash = JSON.parse(localStorage.deletedDays || "[]");
+  trash.push({ key: selectedDayKey, value: localStorage[selectedDayKey], date: Date.now() });
+  localStorage.deletedDays = JSON.stringify(trash);
+  
+  delete localStorage[selectedDayKey];
+  closeDayEditor();
+  loadDays();
+}
+
+// Корзина
+function openTrash() {
+  document.getElementById("projectView").classList.add("hidden");
+  document.getElementById("trashView").classList.remove("hidden");
+  renderTrash();
+}
+
+function closeTrash() {
+  document.getElementById("trashView").classList.add("hidden");
+  document.getElementById("projectView").classList.remove("hidden");
+}
+
+function renderTrash() {
+  const tList = document.getElementById("trashList");
+  tList.innerHTML = "";
+  const trash = JSON.parse(localStorage.deletedDays || "[]");
+  
+  if(trash.length === 0) tList.innerHTML = "<div style='text-align:center;color:#8e8e93'>Кошик порожній</div>";
+
+  trash.forEach((item, idx) => {
+    const d = document.createElement("div");
+    d.className = "day";
+    d.innerHTML = `<span>${item.key}</span><span style="color:var(--accent)">Відновити</span>`;
+    d.onclick = () => {
+      localStorage[item.key] = item.value;
+      trash.splice(idx, 1);
+      localStorage.deletedDays = JSON.stringify(trash);
+      renderTrash();
+      loadDays();
+    };
+    tList.appendChild(d);
+  });
+}
+
+// Инициализация
+if (!localStorage.day_2024_05_20) localStorage.day_2024_05_20 = 28800000; 
+loadDays();
+</script>
 
 </body>
 </html>
