@@ -31,6 +31,7 @@ body{
   margin:0; background:var(--bg); color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  overflow-x: hidden;
 }
 .hidden{display:none !important}
 
@@ -42,21 +43,20 @@ body{
 .btn{
   padding:14px; text-align:center; color:var(--accent); font-size:16px;
   display: flex; align-items: center; justify-content: center; white-space: nowrap;
-  cursor: pointer;
 }
 .btn svg { width: 18px; height: 18px; margin-right: 8px; fill: currentColor; }
 .btn:active,.adjust:active{transform:scale(.95)}
-.btn.disabled{opacity:0.3; pointer-events:none}
+.btn.disabled{opacity:.35;pointer-events:none}
 .btn.danger{color:var(--danger)}
 
 .card{padding:18px}
 
 #contextMenu {
-    position: fixed; z-index: 9999; min-width: 180px;
+    position: fixed; z-index: 2000; min-width: 180px;
     background: rgba(44, 44, 46, 0.95); backdrop-filter: blur(20px);
     border-radius: 14px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     transform: scale(0); transform-origin: top left;
-    transition: transform 0.15s; pointer-events: none;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none;
 }
 #contextMenu.visible { transform: scale(1); pointer-events: auto; }
 .menu-item { padding: 14px 18px; font-size: 17px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
@@ -98,7 +98,8 @@ body{
 }
 
 .days{ padding:14px; display:grid; gap:10px; }
-.day{ display:flex; justify-content:space-between; padding:16px 14px; font-size:15px; }
+.day{ display:flex; justify-content:space-between; padding:16px 14px; font-size:15px; transition: transform 0.1s; }
+.day:active { transform: scale(0.98); background: var(--glass-light); }
 
 .edit-container { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
 .edit-label { color: var(--sub); font-size: 14px; margin-bottom: 8px; padding-left: 10px; }
@@ -125,9 +126,7 @@ input[type=file]{display:none}
   <div class="top">
     <div class="btn" onclick="exportCSV()">Експорт</div>
     <div class="btn" onclick="importCSV()">Імпорт</div>
-    <div class="btn danger" style="grid-column: span 2; margin-top: 5px; border: 2px solid var(--danger);" onclick="migrateCrypto()">
-       🚀 ПЕРЕНЕСТИ CRYPTO В АРХІВ
-    </div>
+    <div class="btn danger" style="grid-column: span 2; margin-top: 5px;" onclick="migrateCrypto()">Перенести Crypto в Проєкти</div>
     <input type="file" id="fileInput">
   </div>
   <div class="projects">
@@ -164,7 +163,10 @@ input[type=file]{display:none}
 <div id="projectView" class="hidden">
   <div class="header">
     <div class="btn" onclick="backFromProject()">← Назад</div>
-    <div class="btn danger" onclick="openTrash()">🗑 Кошик</div>
+    <div class="btn danger" onclick="openTrash()">
+        <svg viewBox="0 0 448 512"><path d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0H284.2c12.1 0 23.2 6.8 28.6 17.7L320 32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 96 0 81.7 0 64S14.3 32 32 32h96l7.2-14.3zM32 128H416V448c0 35.3-28.7 64-64 64H96c-35.3 0-64-28.7-64-64V128zm96 64c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16z"/></svg>
+        Кошик
+    </div>
   </div>
   <div class="timer-wrap">
     <div id="projectTimer" class="timer"><div class="wave"></div><span class="time">00:00:00</span></div>
@@ -180,7 +182,10 @@ input[type=file]{display:none}
 
 <div id="trashView" class="hidden">
     <div class="header"><div class="btn" onclick="showView('projectView')">← Назад</div></div>
-    <div class="days" id="trashList"></div>
+    <div class="edit-container">
+        <div class="edit-label">Кошик (затисніть для відновлення)</div>
+        <div class="days" id="trashList"></div>
+    </div>
 </div>
 
 <div id="editView" class="hidden">
@@ -189,7 +194,10 @@ input[type=file]{display:none}
         <div class="btn" onclick="saveEdit()">Зберегти</div>
     </div>
     <div class="edit-container">
-        <div class="input-card"><input type="text" id="editTimeInput" class="time-input"></div>
+        <div>
+            <div class="edit-label" id="editDateLabel">Дата</div>
+            <div class="input-card"><input type="text" id="editTimeInput" class="time-input"></div>
+        </div>
         <div class="btn danger" onclick="moveToTrash()">Видалити в кошик</div>
     </div>
 </div>
@@ -197,32 +205,28 @@ input[type=file]{display:none}
 <script>
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
-  let s=Math.floor(Math.abs(Number(t))/1000);
-  let h=Math.floor(s/3600);
-  let m=Math.floor((s%3600)/60);
-  let sec=s%60;
-  return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");
+  const s=Math.floor(Math.abs(Number(t))/1000);
+  return String(Math.floor(s/3600)).padStart(2,"0")+":"+
+         String(Math.floor(s%3600/60)).padStart(2,"0")+":"+
+         String(s%60).padStart(2,"0");
 };
 const parseFmt = s => {
-    let p = s.split(':').map(Number);
+    const p = s.split(':').map(Number);
     return p.length===3 ? (p[0]*3600+p[1]*60+p[2])*1000 : 0;
 };
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
+/* ТАЙМЕРЫ */
 let main={t:Number(localStorage.main_total)||0, s:Number(localStorage.main_start)||0, run:false};
 const mainTimer=document.getElementById("mainTimer");
 if(main.s){ main.run=true; mainTimer.classList.add("active"); }
 
 function tickMain(){
-  let v = main.run ? main.t+(Date.now()-main.s) : main.t;
+  const v = main.run ? main.t+(Date.now()-main.s) : main.t;
   mainTimer.querySelector(".time").textContent = fmt(v);
-  let a = v > 0;
-  document.getElementById("assignArni").classList.toggle("disabled", !a);
-  document.getElementById("assignUapp").classList.toggle("disabled", !a);
-  requestAnimationFrame(tickMain);
+  updateAssign(); requestAnimationFrame(tickMain);
 }
-
 mainTimer.onclick=()=>{
   if(main.run){
     main.t+=Date.now()-main.s; main.s=0; main.run=false;
@@ -237,14 +241,21 @@ mainTimer.onclick=()=>{
 function adjustMain(d){ main.t=Math.max(0,main.t+d); localStorage.main_total=main.t; }
 function assignMain(p){
   if(!main.t)return;
-  let key=k("main",p);
+  const key=k("main",p);
   localStorage[key]=(Number(localStorage[key]||0))+main.t;
   main={t:0,s:0,run:false}; localStorage.main_start=0; localStorage.main_total=0;
   mainTimer.classList.remove("active"); updateToday();
 }
+function updateAssign(){
+  const a = main.t > 0;
+  const arni = document.getElementById("assignArni");
+  const uapp = document.getElementById("assignUapp");
+  if(arni) arni.classList.toggle("disabled", !a);
+  if(uapp) uapp.classList.toggle("disabled", !a);
+}
 function updateToday(){
   ["Arni","UAPP"].forEach(p=>{
-    let el=document.getElementById("today_"+p.toLowerCase());
+    const el=document.getElementById("today_"+p.toLowerCase());
     if(el)el.textContent="Сьогодні "+fmt(Number(localStorage[k("main",p)])||0);
   });
 }
@@ -254,18 +265,17 @@ tickMain(); updateToday();
 let mode=null, cur=null, editingKey=null;
 function showView(id){
     ['home','projectsView','projectView','editView','trashView'].forEach(v=>{
-       let el = document.getElementById(v);
-       if(el) el.classList.toggle('hidden', v!==id);
+       const el = document.getElementById(v);
+       if(el) el.classList.toggle('hidden',v!==id);
     });
 }
 function goHome(){showView('home')}
-function openSecondary(){ renderSecondary(); showView('projectsView'); }
-function backFromProject(){ mode==="secondary"?openSecondary():goHome(); }
+function openSecondary(){renderSecondary(); showView('projectsView')}
+function backFromProject(){mode==="secondary"?openSecondary():goHome()}
 
-/* ПРОЕКТЫ */
+/* ПРОЄКТИ */
 const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
 const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
-
 function renderSecondary(){
   const list=document.getElementById("secondaryList");
   list.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
@@ -276,14 +286,14 @@ function renderSecondary(){
   });
 }
 function addSecondary(){
-  let n=prompt("Назва проєкту"); if(!n)return;
-  let l=getSec(); if(!l.includes(n)) l.unshift(n); saveSec(l); renderSecondary();
+  const n=prompt("Назва проєкту"); if(!n)return;
+  const l=getSec(); if(!l.includes(n)) l.unshift(n); saveSec(l); renderSecondary();
 }
 
 /* МИГРАЦИЯ */
 function migrateCrypto() {
-    if(!confirm("Перенести дані 'Crypto' в архив проєктів?")) return;
-    let l=getSec(); if(!l.includes("Crypto")) l.push("Crypto"); saveSec(l);
+    if(!confirm("Перенести дані 'Crypto' у розділ Проєкти?")) return;
+    let l = getSec(); if(!l.includes("Crypto")) l.push("Crypto"); saveSec(l);
     Object.keys(localStorage).forEach(key => {
         if(key.startsWith("main_Crypto_")) {
             localStorage[key.replace("main_Crypto_", "sec_Crypto_")] = localStorage[key];
@@ -294,29 +304,28 @@ function migrateCrypto() {
             localStorage.removeItem(key);
         }
     });
-    alert("Готово! Crypto тепер в Проєктах.");
+    alert("Crypto перенесено!");
     location.reload();
 }
 
-/* ТАЙМЕР ПРОЕКТА */
 let proj={run:false,t:0,s:0};
 const projectTimer=document.getElementById("projectTimer");
 function loadProj(){
-  let base=`proj_${mode}_${cur}`;
-  proj.t=Number(localStorage[base+"_total"])||0; proj.s=Number(localStorage[base+"_start"]||0);
+  const base=`proj_${mode}_${cur}`;
+  proj.t=Number(localStorage[base+"_total"])||0; proj.s=Number(localStorage[base+"_start"])||0;
   proj.run=!!proj.s; projectTimer.classList.toggle("active",proj.run);
   tickProj(); loadDays();
 }
 function tickProj(){
-  let v=proj.run?proj.t+(Date.now()-proj.s):proj.t;
+  const v=proj.run?proj.t+(Date.now()-proj.s):proj.t;
   projectTimer.querySelector(".time").textContent=fmt(v);
-  if(!document.getElementById('projectView').classList.contains('hidden')) requestAnimationFrame(tickProj);
+  if(!document.getElementById('projectView').classList.contains('hidden'))requestAnimationFrame(tickProj);
 }
 projectTimer.onclick=()=>{
-  let base=`proj_${mode}_${cur}`;
+  const base=`proj_${mode}_${cur}`;
   if(proj.run){
-    let d=Date.now()-proj.s; proj.t+=d; proj.s=0; proj.run=false;
-    let key=k(mode==="main"?"main":"sec",cur);
+    const d=Date.now()-proj.s; proj.t+=d; proj.s=0; proj.run=false;
+    const key=k(mode==="main"?"main":"sec",cur);
     localStorage[key]=(Number(localStorage[key]||0))+d;
     localStorage[base+"_start"]=0; localStorage[base+"_total"]=proj.t;
     loadDays(); updateToday();
@@ -327,7 +336,7 @@ projectTimer.onclick=()=>{
   projectTimer.classList.toggle("active",proj.run);
 };
 function adjustProject(d){
-  let key=k(mode==="main"?"main":"sec",cur);
+  const key=k(mode==="main"?"main":"sec",cur);
   localStorage[key]=(Number(localStorage[key]||0))+d;
   proj.t=Math.max(0,proj.t+d); loadDays(); updateToday();
 }
@@ -338,10 +347,10 @@ function openSecondaryProject(n){mode="secondary";cur=n;showView('projectView');
 let pressTimer, lastX, lastY;
 const menu = document.getElementById('contextMenu');
 function dayTouchStart(e, key, isTrash=false){
-    let touch = e.touches ? e.touches[0] : e;
+    const touch = e.touches ? e.touches[0] : e;
     lastX = touch.clientX; lastY = touch.clientY;
     clearTimeout(pressTimer);
-    pressTimer = setTimeout(() => { showContextMenu(key, isTrash); }, 600);
+    pressTimer = setTimeout(() => { showContextMenu(key, isTrash); }, 700);
 }
 function dayTouchEnd(){ clearTimeout(pressTimer); }
 function showContextMenu(key, isTrash){
@@ -356,6 +365,7 @@ function hideMenu(){ menu.classList.remove('visible'); }
 
 function openEditDay(key){
     editingKey=key;
+    document.getElementById('editDateLabel').textContent="Редагування: "+key.split('_')[2];
     document.getElementById('editTimeInput').value=fmt(Number(localStorage[key])||0);
     showView('editView');
 }
@@ -379,13 +389,15 @@ function renderTrash(){
         const d=key.split("_")[3];
         const row=document.createElement("div"); row.className="day";
         row.innerHTML=`<span>${d}</span><span>${fmt(localStorage[key])}</span>`;
-        row.onmousedown=(e)=>dayTouchStart(e, key, true); row.ontouchstart=(e)=>dayTouchStart(e, key, true);
-        row.onmouseup=dayTouchEnd; row.ontouchend=dayTouchEnd;
+        row.onmousedown=(e)=>dayTouchStart(e, key, true);
+        row.onmouseup=dayTouchEnd;
+        row.ontouchstart=(e)=>dayTouchStart(e, key, true);
+        row.ontouchend=dayTouchEnd;
         list.appendChild(row);
     });
 }
 function restoreDay(trashKey){
-    let ok = trashKey.replace("trash_", ""); localStorage[ok] = localStorage[trashKey];
+    const ok = trashKey.replace("trash_", ""); localStorage[ok] = localStorage[trashKey];
     localStorage.removeItem(trashKey); loadDays(); renderTrash(); updateToday();
 }
 function loadDays(){
@@ -395,10 +407,25 @@ function loadDays(){
       const d=key.split("_")[2]; const D=new Date(d);
       const row=document.createElement("div"); row.className="day";
       row.innerHTML=`<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span><span>${fmt(localStorage[key])}</span>`;
-      row.onmousedown=(e)=>dayTouchStart(e, key); row.ontouchstart=(e)=>dayTouchStart(e, key);
-      row.onmouseup=dayTouchEnd; row.ontouchend=dayTouchEnd;
+      row.onmousedown=(e)=>dayTouchStart(e, key);
+      row.onmouseup=dayTouchEnd;
+      row.ontouchstart=(e)=>dayTouchStart(e, key);
+      row.ontouchend=dayTouchEnd;
       list.appendChild(row);
   });
 }
+
 function exportCSV(){
-  let c=""; Object.keys(localStorage).forEach(k=>c+=
+  let c=""; Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c])); a.download="work-time.csv"; a.click();
+}
+function importCSV(){document.getElementById('fileInput').click()}
+document.getElementById('fileInput').onchange=e=>{
+  const r=new FileReader(); r.onload=()=>{
+    r.result.split("\n").forEach(l=>{ const [k,v]=l.split(","); if(k)localStorage[k]=v; });
+    location.reload();
+  }; r.readAsText(e.target.files[0]);
+};
+</script>
+</body>
+</html>
