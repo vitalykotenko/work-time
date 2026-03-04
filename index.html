@@ -126,7 +126,7 @@ input[type=file]{display:none}
   <div class="top">
     <div class="btn" onclick="exportCSV()">Експорт</div>
     <div class="btn" onclick="importCSV()">Імпорт</div>
-    <div class="btn danger" style="grid-column: span 2; margin-top: 5px;" onclick="migrateCrypto()">Перенести Crypto в Проєкти</div>
+    <div class="btn danger" style="grid-column: span 2; margin-top: 5px;" onclick="migrateCrypto()">Перенести Crypto в архів Проєктів</div>
     <input type="file" id="fileInput">
   </div>
   <div class="projects">
@@ -205,19 +205,20 @@ input[type=file]{display:none}
 <script>
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
-  const s=Math.floor(Math.abs(Number(t))/1000);
-  return String(Math.floor(s/3600)).padStart(2,"0")+":"+
-         String(Math.floor(s%3600/60)).padStart(2,"0")+":"+
-         String(s%60).padStart(2,"0");
+  let val = Math.floor(Math.abs(Number(t))/1000);
+  let h = Math.floor(val/3600);
+  let m = Math.floor((val%3600)/60);
+  let s = val%60;
+  return String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
 };
 const parseFmt = s => {
-    const p = s.split(':').map(Number);
+    let p = s.split(':').map(Number);
     return p.length===3 ? (p[0]*3600+p[1]*60+p[2])*1000 : 0;
 };
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
-/* ТАЙМЕРЫ */
+/* ГОЛОВНИЙ ТАЙМЕР */
 let main={t:Number(localStorage.main_total)||0, s:Number(localStorage.main_start)||0, run:false};
 const mainTimer=document.getElementById("mainTimer");
 if(main.s){ main.run=true; mainTimer.classList.add("active"); }
@@ -225,8 +226,10 @@ if(main.s){ main.run=true; mainTimer.classList.add("active"); }
 function tickMain(){
   const v = main.run ? main.t+(Date.now()-main.s) : main.t;
   mainTimer.querySelector(".time").textContent = fmt(v);
-  updateAssign(); requestAnimationFrame(tickMain);
+  updateAssign(); 
+  requestAnimationFrame(tickMain);
 }
+
 mainTimer.onclick=()=>{
   if(main.run){
     main.t+=Date.now()-main.s; main.s=0; main.run=false;
@@ -238,62 +241,76 @@ mainTimer.onclick=()=>{
     mainTimer.classList.add("active");
   }
 };
+
 function adjustMain(d){ main.t=Math.max(0,main.t+d); localStorage.main_total=main.t; }
+
 function assignMain(p){
   if(!main.t)return;
-  const key=k("main",p);
+  let key=k("main",p);
   localStorage[key]=(Number(localStorage[key]||0))+main.t;
   main={t:0,s:0,run:false}; localStorage.main_start=0; localStorage.main_total=0;
   mainTimer.classList.remove("active"); updateToday();
 }
+
 function updateAssign(){
-  const a = main.t > 0;
-  const arni = document.getElementById("assignArni");
-  const uapp = document.getElementById("assignUapp");
-  if(arni) arni.classList.toggle("disabled", !a);
-  if(uapp) uapp.classList.toggle("disabled", !a);
+  let a = main.t > 0;
+  const btnArni = document.getElementById("assignArni");
+  const btnUapp = document.getElementById("assignUapp");
+  if(btnArni) btnArni.classList.toggle("disabled", !a);
+  if(btnUapp) btnUapp.classList.toggle("disabled", !a);
 }
+
 function updateToday(){
   ["Arni","UAPP"].forEach(p=>{
     const el=document.getElementById("today_"+p.toLowerCase());
-    if(el)el.textContent="Сьогодні "+fmt(Number(localStorage[k("main",p)])||0);
+    if(el) el.textContent="Сьогодні "+fmt(Number(localStorage[k("main",p)])||0);
   });
 }
 tickMain(); updateToday();
 
-/* НАВИГАЦИЯ */
+/* НАВІГАЦІЯ */
 let mode=null, cur=null, editingKey=null;
 function showView(id){
     ['home','projectsView','projectView','editView','trashView'].forEach(v=>{
-       const el = document.getElementById(v);
-       if(el) el.classList.toggle('hidden',v!==id);
+        const el = document.getElementById(v);
+        if(el) el.classList.toggle('hidden', v!==id);
     });
 }
 function goHome(){showView('home')}
-function openSecondary(){renderSecondary(); showView('projectsView')}
-function backFromProject(){mode==="secondary"?openSecondary():goHome()}
+function openSecondary(){ renderSecondary(); showView('projectsView'); }
+function backFromProject(){ mode==="secondary"?openSecondary():goHome(); }
 
-/* ПРОЄКТИ */
+/* ВТОРОСТЕПЕННЫЕ ПРОЕКТЫ */
 const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
 const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
+
 function renderSecondary(){
   const list=document.getElementById("secondaryList");
   list.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
   getSec().forEach(n=>{
-    const d=document.createElement("div"); d.className="card"; d.textContent=n;
+    const d=document.createElement("div"); 
+    d.className="card"; d.textContent=n;
     d.style.marginTop = "10px";
-    d.onclick=()=>openSecondaryProject(n); list.appendChild(d);
+    d.onclick=()=>openSecondaryProject(n); 
+    list.appendChild(d);
   });
 }
+
 function addSecondary(){
-  const n=prompt("Назва проєкту"); if(!n)return;
-  const l=getSec(); if(!l.includes(n)) l.unshift(n); saveSec(l); renderSecondary();
+  let n=prompt("Назва проєкту"); if(!n)return;
+  let l=getSec(); if(!l.includes(n)) l.unshift(n); saveSec(l); renderSecondary();
 }
 
-/* МИГРАЦИЯ */
+/* МИГРАЦИЯ CRYPTO */
 function migrateCrypto() {
-    if(!confirm("Перенести дані 'Crypto' у розділ Проєкти?")) return;
-    let l = getSec(); if(!l.includes("Crypto")) l.push("Crypto"); saveSec(l);
+    if(!confirm("Перенести всі дані 'Crypto' у розділ Проєкти?")) return;
+    
+    // Добавляем в список
+    let sec = getSec();
+    if(!sec.includes("Crypto")) sec.push("Crypto");
+    saveSec(sec);
+    
+    // Переименовываем ключи в памяти
     Object.keys(localStorage).forEach(key => {
         if(key.startsWith("main_Crypto_")) {
             localStorage[key.replace("main_Crypto_", "sec_Crypto_")] = localStorage[key];
@@ -304,28 +321,35 @@ function migrateCrypto() {
             localStorage.removeItem(key);
         }
     });
-    alert("Crypto перенесено!");
+    
+    alert("Crypto успішно перенесено в архів проєктів!");
     location.reload();
 }
 
+/* ТАЙМЕР ПРОЕКТУ */
 let proj={run:false,t:0,s:0};
 const projectTimer=document.getElementById("projectTimer");
+
 function loadProj(){
-  const base=`proj_${mode}_${cur}`;
-  proj.t=Number(localStorage[base+"_total"])||0; proj.s=Number(localStorage[base+"_start"])||0;
-  proj.run=!!proj.s; projectTimer.classList.toggle("active",proj.run);
+  let base=`proj_${mode}_${cur}`;
+  proj.t=Number(localStorage[base+"_total"])||0; 
+  proj.s=Number(localStorage[base+"_start"])||0;
+  proj.run=!!proj.s; 
+  projectTimer.classList.toggle("active",proj.run);
   tickProj(); loadDays();
 }
+
 function tickProj(){
-  const v=proj.run?proj.t+(Date.now()-proj.s):proj.t;
+  let v=proj.run ? proj.t+(Date.now()-proj.s) : proj.t;
   projectTimer.querySelector(".time").textContent=fmt(v);
-  if(!document.getElementById('projectView').classList.contains('hidden'))requestAnimationFrame(tickProj);
+  if(!document.getElementById('projectView').classList.contains('hidden')) requestAnimationFrame(tickProj);
 }
+
 projectTimer.onclick=()=>{
-  const base=`proj_${mode}_${cur}`;
+  let base=`proj_${mode}_${cur}`;
   if(proj.run){
-    const d=Date.now()-proj.s; proj.t+=d; proj.s=0; proj.run=false;
-    const key=k(mode==="main"?"main":"sec",cur);
+    let d=Date.now()-proj.s; proj.t+=d; proj.s=0; proj.run=false;
+    let key=k(mode==="main"?"main":"sec",cur);
     localStorage[key]=(Number(localStorage[key]||0))+d;
     localStorage[base+"_start"]=0; localStorage[base+"_total"]=proj.t;
     loadDays(); updateToday();
@@ -335,24 +359,28 @@ projectTimer.onclick=()=>{
   }
   projectTimer.classList.toggle("active",proj.run);
 };
+
 function adjustProject(d){
-  const key=k(mode==="main"?"main":"sec",cur);
+  let key=k(mode==="main"?"main":"sec",cur);
   localStorage[key]=(Number(localStorage[key]||0))+d;
   proj.t=Math.max(0,proj.t+d); loadDays(); updateToday();
 }
+
 function openMainProject(n){mode="main";cur=n;showView('projectView');loadProj()}
 function openSecondaryProject(n){mode="secondary";cur=n;showView('projectView');loadProj()}
 
-/* МЕНЮ */
+/* МЕНЮ ПРАВКИ */
 let pressTimer, lastX, lastY;
 const menu = document.getElementById('contextMenu');
+
 function dayTouchStart(e, key, isTrash=false){
-    const touch = e.touches ? e.touches[0] : e;
+    let touch = e.touches ? e.touches[0] : e;
     lastX = touch.clientX; lastY = touch.clientY;
     clearTimeout(pressTimer);
     pressTimer = setTimeout(() => { showContextMenu(key, isTrash); }, 700);
 }
 function dayTouchEnd(){ clearTimeout(pressTimer); }
+
 function showContextMenu(key, isTrash){
     const menuAction = document.getElementById('menuAction');
     menuAction.textContent = isTrash ? "Відновити" : "Редагувати";
@@ -375,13 +403,16 @@ function saveEdit(){
     if(editingKey.endsWith(dayKey())){ proj.t=Number(localStorage[editingKey]); localStorage[`proj_${mode}_${cur}_total`]=proj.t; }
     loadDays(); updateToday(); closeEdit();
 }
+
 function moveToTrash(){
     localStorage["trash_"+editingKey] = localStorage[editingKey];
     localStorage.removeItem(editingKey);
     if(editingKey.endsWith(dayKey())){ proj.t=0; localStorage[`proj_${mode}_${cur}_total`]=0; }
     loadDays(); updateToday(); closeEdit();
 }
+
 function openTrash(){ showView('trashView'); renderTrash(); }
+
 function renderTrash(){
     const list=document.getElementById("trashList"); list.innerHTML="";
     const prefix = "trash_" + (mode==="main"?"main_":"sec_") + cur + "_";
@@ -396,10 +427,14 @@ function renderTrash(){
         list.appendChild(row);
     });
 }
+
 function restoreDay(trashKey){
-    const ok = trashKey.replace("trash_", ""); localStorage[ok] = localStorage[trashKey];
-    localStorage.removeItem(trashKey); loadDays(); renderTrash(); updateToday();
+    const originalKey = trashKey.replace("trash_", "");
+    localStorage[originalKey] = localStorage[trashKey];
+    localStorage.removeItem(trashKey);
+    loadDays(); renderTrash(); updateToday();
 }
+
 function loadDays(){
   const list=document.getElementById("daysList"); list.innerHTML="";
   const prefix = (mode==="main"?"main_":"sec_") + cur + "_";
@@ -415,16 +450,23 @@ function loadDays(){
   });
 }
 
+/* CSV */
 function exportCSV(){
   let c=""; Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c])); a.download="work-time.csv"; a.click();
+  let a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c])); a.download="work-time.csv"; a.click();
 }
 function importCSV(){document.getElementById('fileInput').click()}
 document.getElementById('fileInput').onchange=e=>{
-  const r=new FileReader(); r.onload=()=>{
-    r.result.split("\n").forEach(l=>{ const [k,v]=l.split(","); if(k)localStorage[k]=v; });
+  let r=new FileReader(); r.onload=()=>{
+    r.result.split("\n").forEach(l=>{ let [k,v]=l.split(","); if(k)localStorage[k]=v; });
     location.reload();
   }; r.readAsText(e.target.files[0]);
+};
+
+window.oncontextmenu = function(e) {
+    if (e.target.closest('.day')) {
+        e.preventDefault(); e.stopPropagation(); return false;
+    }
 };
 </script>
 </body>
