@@ -25,83 +25,43 @@
   --sub:#8E8E93;
 }
 
-*{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
-}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
 body{
-  margin:0;
-  background:var(--bg);
-  color:#fff;
+  margin:0; background:var(--bg); color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   overflow-x: hidden;
 }
 .hidden{display:none}
 
 .btn,.card,.timer,.day,.adjust, .input-card{
-  background:var(--glass);
-  backdrop-filter:blur(26px);
-  border-radius:var(--radius);
-  border:1px solid var(--stroke);
+  background:var(--glass); backdrop-filter:blur(26px);
+  border-radius:var(--radius); border:1px solid var(--stroke);
   box-shadow:inset 0 0 0 1px var(--stroke-soft);
 }
 .btn{
-  padding:14px;
-  text-align:center;
-  color:var(--accent);
-  font-size:16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
+  padding:14px; text-align:center; color:var(--accent); font-size:16px;
+  display: flex; align-items: center; justify-content: center; white-space: nowrap;
 }
-/* Стили для иконки SF Symbol */
-.btn svg {
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-  fill: currentColor;
-}
+.btn svg { width: 18px; height: 18px; margin-right: 8px; fill: currentColor; }
 .btn:active,.adjust:active{transform:scale(.95)}
 .btn.disabled{opacity:.35;pointer-events:none}
 .btn.danger{color:var(--danger)}
 
 .card{padding:18px}
 
-/* КОНТЕКСТНЕ МЕНЮ */
 #contextMenu {
-    position: fixed;
-    z-index: 2000;
-    min-width: 180px;
-    background: rgba(44, 44, 46, 0.95);
-    backdrop-filter: blur(20px);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-    transform: scale(0);
-    transform-origin: top left;
-    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
+    position: fixed; z-index: 2000; min-width: 180px;
+    background: rgba(44, 44, 46, 0.95); backdrop-filter: blur(20px);
+    border-radius: 14px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    transform: scale(0); transform-origin: top left;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none;
 }
-#contextMenu.visible { 
-    transform: scale(1); 
-    pointer-events: auto;
-}
-.menu-item {
-    padding: 14px 18px;
-    font-size: 17px;
-    color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+#contextMenu.visible { transform: scale(1); pointer-events: auto; }
+.menu-item { padding: 14px 18px; font-size: 17px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
 .menu-item:active { background: rgba(255,255,255,0.1); }
 
-/* ЕКРАНИ */
 .top{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }
 .header{ display: flex; justify-content: space-between; padding: 14px; gap: 12px; }
 .header .btn { flex: 1; }
@@ -138,10 +98,7 @@ body{
 }
 
 .days{ padding:14px; display:grid; gap:10px; }
-.day{ 
-    display:flex; justify-content:space-between; padding:16px 14px; font-size:15px; 
-    transition: transform 0.1s;
-}
+.day{ display:flex; justify-content:space-between; padding:16px 14px; font-size:15px; transition: transform 0.1s; }
 .day:active { transform: scale(0.98); background: var(--glass-light); }
 
 .edit-container { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
@@ -167,14 +124,15 @@ input[type=file]{display:none}
 
 <div id="home">
   <div class="top">
-    <div class="btn" onclick="exportCSV()">Експорт CSV</div>
-    <div class="btn" onclick="importCSV()">Імпорт CSV</div>
+    <div class="btn" onclick="exportCSV()">Експорт</div>
+    <div class="btn" onclick="importCSV()">Імпорт</div>
+    <div class="btn danger" style="grid-column: span 2; margin-top: 5px;" onclick="migrateCrypto()">Перенести Crypto в архів</div>
     <input type="file" id="fileInput">
   </div>
   <div class="projects">
-    <div class="card project" onclick="openMainProject('Crypto')">
-      <div class="name">Crypto</div>
-      <div class="today" id="today_crypto">Сьогодні 00:00:00</div>
+    <div class="card project" onclick="openMainProject('Arni')">
+      <div class="name">Арни</div>
+      <div class="today" id="today_arni">Сьогодні 00:00:00</div>
     </div>
     <div class="card project" onclick="openMainProject('UAPP')">
       <div class="name">UAPP</div>
@@ -182,7 +140,7 @@ input[type=file]{display:none}
     </div>
   </div>
   <div class="assign">
-    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
+    <div class="btn disabled" id="assignArni" onclick="assignMain('Arni')">Зачислити в Арни</div>
     <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
   </div>
   <div class="timer-wrap">
@@ -240,12 +198,11 @@ input[type=file]{display:none}
             <div class="edit-label" id="editDateLabel">Дата</div>
             <div class="input-card"><input type="text" id="editTimeInput" class="time-input"></div>
         </div>
-        <div class="btn danger" onclick="moveToTrash()">Видалити в кошик</div>
+        <div class="btn danger" onclick="moveToTrash()">Удалить в кошик</div>
     </div>
 </div>
 
 <script>
-/* JS СТАБІЛЬНА ВЕРСІЯ */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
   const s=Math.floor(Math.abs(t)/1000);
@@ -260,7 +217,7 @@ const parseFmt = s => {
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
-/* ТАЙМЕРИ */
+/* ТАЙМЕРЫ */
 let main={t:+localStorage.main_total||0, s:+localStorage.main_start||0, run:false};
 const mainTimer=document.getElementById("mainTimer");
 if(main.s){ main.run=true; mainTimer.classList.add("active"); }
@@ -291,18 +248,18 @@ function assignMain(p){
 }
 function updateAssign(){
   const a=main.t>0;
-  document.getElementById("assignCrypto").classList.toggle("disabled",!a);
-  document.getElementById("assignUapp").classList.toggle("disabled",!a);
+  if(document.getElementById("assignArni")) document.getElementById("assignArni").classList.toggle("disabled",!a);
+  if(document.getElementById("assignUapp")) document.getElementById("assignUapp").classList.toggle("disabled",!a);
 }
 function updateToday(){
-  ["Crypto","UAPP"].forEach(p=>{
+  ["Arni","UAPP"].forEach(p=>{
     const el=document.getElementById("today_"+p.toLowerCase());
     if(el)el.textContent="Сьогодні "+fmt(+localStorage[k("main",p)]||0);
   });
 }
 tickMain(); updateToday();
 
-/* НАВІГАЦІЯ */
+/* НАВИГАЦИЯ */
 let mode=null, cur=null, editingKey=null;
 function showView(id){
     ['home','projectsView','projectView','editView','trashView'].forEach(v=>document.getElementById(v).classList.toggle('hidden',v!==id));
@@ -311,7 +268,7 @@ function goHome(){showView('home')}
 function openSecondary(){renderSecondary(); showView('projectsView')}
 function backFromProject(){mode==="secondary"?openSecondary():goHome()}
 
-/* ПРОЄКТИ */
+/* ВТОРОСТЕПЕННЫЕ ПРОЕКТЫ */
 const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
 const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
 function renderSecondary(){
@@ -325,6 +282,36 @@ function renderSecondary(){
 function addSecondary(){
   const n=prompt("Назва проєкту"); if(!n)return;
   const l=getSec(); l.unshift(n); saveSec(l); renderSecondary();
+}
+
+/* ЛОГИКА МИГРАЦИИ CRYPTO */
+function migrateCrypto() {
+    if(!confirm("Перенести дані 'Crypto' у розділ Проєкти?")) return;
+    
+    // 1. Добавляем Crypto в список вторичных проектов, если его там нет
+    let secList = getSec();
+    if(!secList.includes("Crypto")) {
+        secList.push("Crypto");
+        saveSec(secList);
+    }
+    
+    // 2. Проходим по всем ключам и меняем префиксы
+    Object.keys(localStorage).forEach(key => {
+        // Меняем данные дней: main_Crypto_... -> sec_Crypto_...
+        if(key.startsWith("main_Crypto_")) {
+            const newKey = key.replace("main_Crypto_", "sec_Crypto_");
+            localStorage[newKey] = localStorage[key];
+            localStorage.removeItem(key);
+        }
+        // Меняем общие итоги таймера проекта
+        if(key === "proj_main_Crypto_total") {
+            localStorage["proj_secondary_Crypto_total"] = localStorage[key];
+            localStorage.removeItem(key);
+        }
+    });
+    
+    alert("Дані перенесено! Тепер Crypto доступний у списку Проєкти.");
+    location.reload();
 }
 
 let proj={run:false,t:0,s:0};
@@ -362,14 +349,12 @@ function adjustProject(d){
 function openMainProject(n){mode="main";cur=n;showView('projectView');loadProj()}
 function openSecondaryProject(n){mode="secondary";cur=n;showView('projectView');loadProj()}
 
-/* КОНТЕКСТНЕ МЕНЮ ТА LONG PRESS */
 let pressTimer, lastX, lastY;
 const menu = document.getElementById('contextMenu');
 
 function dayTouchStart(e, key, isTrash=false){
     const touch = e.touches ? e.touches[0] : e;
     lastX = touch.clientX; lastY = touch.clientY;
-    
     clearTimeout(pressTimer);
     pressTimer = setTimeout(() => {
         if(e.cancelable) e.preventDefault(); 
@@ -391,10 +376,8 @@ function showContextMenu(key, isTrash){
     const menuH = 50;
     let x = lastX;
     let y = lastY;
-    
     if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 10;
     if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 10;
-
     menu.style.left = x + 'px';
     menu.style.top = y + 'px';
     menu.classList.add('visible');
@@ -404,9 +387,7 @@ function hideMenu(){ menu.classList.remove('visible'); }
 
 window.oncontextmenu = function(e) {
     if (e.target.closest('.day')) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
+        e.preventDefault(); e.stopPropagation(); return false;
     }
 };
 
@@ -423,7 +404,6 @@ function saveEdit(){
     loadDays(); updateToday(); closeEdit();
 }
 
-/* КОШИК */
 function moveToTrash(){
     const trashKey = "trash_" + editingKey;
     localStorage[trashKey] = localStorage[editingKey];
@@ -454,7 +434,6 @@ function restoreDay(trashKey){
     renderTrash(); loadDays(); updateToday();
 }
 
-/* СПИСОК ДНІВ */
 function loadDays(){
   const list=document.getElementById("daysList"); list.innerHTML="";
   const prefix = (mode==="main"?"main_":"sec_") + cur + "_";
@@ -470,7 +449,6 @@ function loadDays(){
   });
 }
 
-/* CSV */
 function exportCSV(){
   let c=""; Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c]));
