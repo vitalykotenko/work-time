@@ -25,83 +25,43 @@
   --sub:#8E8E93;
 }
 
-*{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
-}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
 body{
-  margin:0;
-  background:var(--bg);
-  color:#fff;
+  margin:0; background:var(--bg); color:#fff;
   font-family:-apple-system,BlinkMacSystemFont,system-ui;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   overflow-x: hidden;
 }
-.hidden{display:none}
+.hidden{display:none !important}
 
 .btn,.card,.timer,.day,.adjust, .input-card{
-  background:var(--glass);
-  backdrop-filter:blur(26px);
-  border-radius:var(--radius);
-  border:1px solid var(--stroke);
+  background:var(--glass); backdrop-filter:blur(26px);
+  border-radius:var(--radius); border:1px solid var(--stroke);
   box-shadow:inset 0 0 0 1px var(--stroke-soft);
 }
 .btn{
-  padding:14px;
-  text-align:center;
-  color:var(--accent);
-  font-size:16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
+  padding:14px; text-align:center; color:var(--accent); font-size:16px;
+  display: flex; align-items: center; justify-content: center; white-space: nowrap;
 }
-/* Стили для иконки SF Symbol */
-.btn svg {
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-  fill: currentColor;
-}
+.btn svg { width: 18px; height: 18px; margin-right: 8px; fill: currentColor; }
 .btn:active,.adjust:active{transform:scale(.95)}
 .btn.disabled{opacity:.35;pointer-events:none}
 .btn.danger{color:var(--danger)}
 
 .card{padding:18px}
 
-/* КОНТЕКСТНЕ МЕНЮ */
 #contextMenu {
-    position: fixed;
-    z-index: 2000;
-    min-width: 180px;
-    background: rgba(44, 44, 46, 0.95);
-    backdrop-filter: blur(20px);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-    transform: scale(0);
-    transform-origin: top left;
-    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
+    position: fixed; z-index: 2000; min-width: 180px;
+    background: rgba(44, 44, 46, 0.95); backdrop-filter: blur(20px);
+    border-radius: 14px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    transform: scale(0); transform-origin: top left;
+    transition: transform 0.15s; pointer-events: none;
 }
-#contextMenu.visible { 
-    transform: scale(1); 
-    pointer-events: auto;
-}
-.menu-item {
-    padding: 14px 18px;
-    font-size: 17px;
-    color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+#contextMenu.visible { transform: scale(1); pointer-events: auto; }
+.menu-item { padding: 14px 18px; font-size: 17px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
 .menu-item:active { background: rgba(255,255,255,0.1); }
 
-/* ЕКРАНИ */
 .top{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }
 .header{ display: flex; justify-content: space-between; padding: 14px; gap: 12px; }
 .header .btn { flex: 1; }
@@ -138,10 +98,7 @@ body{
 }
 
 .days{ padding:14px; display:grid; gap:10px; }
-.day{ 
-    display:flex; justify-content:space-between; padding:16px 14px; font-size:15px; 
-    transition: transform 0.1s;
-}
+.day{ display:flex; justify-content:space-between; padding:16px 14px; font-size:15px; transition: transform 0.1s; }
 .day:active { transform: scale(0.98); background: var(--glass-light); }
 
 .edit-container { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
@@ -169,12 +126,13 @@ input[type=file]{display:none}
   <div class="top">
     <div class="btn" onclick="exportCSV()">Експорт CSV</div>
     <div class="btn" onclick="importCSV()">Імпорт CSV</div>
+    <div class="btn danger" style="grid-column: span 2; margin-top: 5px;" onclick="migrateCrypto()">ПЕРЕНЕСТИ CRYPTO В АРХІВ</div>
     <input type="file" id="fileInput">
   </div>
   <div class="projects">
-    <div class="card project" onclick="openMainProject('Crypto')">
-      <div class="name">Crypto</div>
-      <div class="today" id="today_crypto">Сьогодні 00:00:00</div>
+    <div class="card project" onclick="openMainProject('Arni')">
+      <div class="name">Арни</div>
+      <div class="today" id="today_arni">Сьогодні 00:00:00</div>
     </div>
     <div class="card project" onclick="openMainProject('UAPP')">
       <div class="name">UAPP</div>
@@ -182,7 +140,7 @@ input[type=file]{display:none}
     </div>
   </div>
   <div class="assign">
-    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
+    <div class="btn disabled" id="assignArni" onclick="assignMain('Arni')">Зачислити в Арни</div>
     <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
   </div>
   <div class="timer-wrap">
@@ -207,7 +165,6 @@ input[type=file]{display:none}
     <div class="btn" onclick="backFromProject()">← Назад</div>
     <div class="btn danger" onclick="openTrash()">
         <svg viewBox="0 0 448 512"><path d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0H284.2c12.1 0 23.2 6.8 28.6 17.7L320 32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 96 0 81.7 0 64S14.3 32 32 32h96l7.2-14.3zM32 128H416V448c0 35.3-28.7 64-64 64H96c-35.3 0-64-28.7-64-64V128zm96 64c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16z"/></svg>
-        Кошик
     </div>
   </div>
   <div class="timer-wrap">
@@ -245,20 +202,21 @@ input[type=file]{display:none}
 </div>
 
 <script>
-/* JS СТАБІЛЬНА ВЕРСІЯ */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
-  const s=Math.floor(Math.abs(t)/1000);
-  return String(Math.floor(s/3600)).padStart(2,"0")+":"+
-         String(Math.floor(s%3600/60)).padStart(2,"0")+":"+
-         String(s%60).padStart(2,"0");
+  let val = Number(t) || 0;
+  let s=Math.floor(Math.abs(val)/1000);
+  let h=Math.floor(s/3600);
+  let m=Math.floor((s%3600)/60);
+  let sec=s%60;
+  return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
 };
 const parseFmt = s => {
     const p = s.split(':').map(Number);
     return p.length===3 ? (p[0]*3600+p[1]*60+p[2])*1000 : 0;
 };
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
-const k=(t,n)=>`${t}_${n}_${dayKey()}`;
+const k=(t,n)=>t + "_" + n + "_" + dayKey();
 
 /* ТАЙМЕРИ */
 let main={t:+localStorage.main_total||0, s:+localStorage.main_start||0, run:false};
@@ -291,13 +249,15 @@ function assignMain(p){
 }
 function updateAssign(){
   const a=main.t>0;
-  document.getElementById("assignCrypto").classList.toggle("disabled",!a);
-  document.getElementById("assignUapp").classList.toggle("disabled",!a);
+  const btnArni = document.getElementById("assignArni");
+  const btnUapp = document.getElementById("assignUapp");
+  if(btnArni) btnArni.classList.toggle("disabled", !a);
+  if(btnUapp) btnUapp.classList.toggle("disabled", !a);
 }
 function updateToday(){
-  ["Crypto","UAPP"].forEach(p=>{
+  ["Arni","UAPP"].forEach(p=>{
     const el=document.getElementById("today_"+p.toLowerCase());
-    if(el)el.textContent="Сьогодні "+fmt(+localStorage[k("main",p)]||0);
+    if(el) el.textContent="Сьогодні "+fmt(+localStorage[k("main",p)]||0);
   });
 }
 tickMain(); updateToday();
@@ -305,7 +265,10 @@ tickMain(); updateToday();
 /* НАВІГАЦІЯ */
 let mode=null, cur=null, editingKey=null;
 function showView(id){
-    ['home','projectsView','projectView','editView','trashView'].forEach(v=>document.getElementById(v).classList.toggle('hidden',v!==id));
+    ['home','projectsView','projectView','editView','trashView'].forEach(v=>{
+        const el = document.getElementById(v);
+        if(el) el.classList.toggle('hidden', v !== id);
+    });
 }
 function goHome(){showView('home')}
 function openSecondary(){renderSecondary(); showView('projectsView')}
@@ -316,21 +279,54 @@ const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
 const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
 function renderSecondary(){
   const list=document.getElementById("secondaryList");
+  if(!list) return;
   list.innerHTML='<div class="card plus" onclick="addSecondary()">＋</div>';
   getSec().forEach(n=>{
     const d=document.createElement("div"); d.className="card"; d.textContent=n;
+    d.style.marginTop = "10px";
     d.onclick=()=>openSecondaryProject(n); list.appendChild(d);
   });
 }
 function addSecondary(){
   const n=prompt("Назва проєкту"); if(!n)return;
-  const l=getSec(); l.unshift(n); saveSec(l); renderSecondary();
+  const l=getSec(); if(!l.includes(n)) { l.unshift(n); saveSec(l); }
+  renderSecondary();
+}
+
+/* ЛОГІКА ПЕРЕНЕСЕННЯ CRYPTO */
+function migrateCrypto() {
+    if(!confirm("Перенести дані 'Crypto' в архів проєктів?")) return;
+    
+    // 1. Додаємо Crypto в список архіву
+    let secList = getSec();
+    if(!secList.includes("Crypto")) {
+        secList.push("Crypto");
+        saveSec(secList);
+    }
+    
+    // 2. Перейменовуємо всі ключі в localStorage
+    Object.keys(localStorage).forEach(key => {
+        // Перейменовуємо дні: main_Crypto_... -> sec_Crypto_...
+        if(key.indexOf("main_Crypto_") === 0) {
+            let newKey = key.replace("main_Crypto_", "sec_Crypto_");
+            localStorage[newKey] = localStorage[key];
+            localStorage.removeItem(key);
+        }
+        // Перейменовуємо підсумок таймера проєкту
+        if(key === "proj_main_Crypto_total") {
+            localStorage["proj_secondary_Crypto_total"] = localStorage[key];
+            localStorage.removeItem(key);
+        }
+    });
+    
+    alert("Готово! Crypto тепер у списку Проєкти.");
+    location.reload();
 }
 
 let proj={run:false,t:0,s:0};
 const projectTimer=document.getElementById("projectTimer");
 function loadProj(){
-  const base=`proj_${mode}_${cur}`;
+  const base="proj_" + mode + "_" + cur;
   proj.t=+localStorage[base+"_total"]||0; proj.s=+localStorage[base+"_start"]||0;
   proj.run=!!proj.s; projectTimer.classList.toggle("active",proj.run);
   tickProj(); loadDays();
@@ -341,7 +337,7 @@ function tickProj(){
   if(!document.getElementById('projectView').classList.contains('hidden'))requestAnimationFrame(tickProj);
 }
 projectTimer.onclick=()=>{
-  const base=`proj_${mode}_${cur}`;
+  const base="proj_" + mode + "_" + cur;
   if(proj.run){
     const d=Date.now()-proj.s; proj.t+=d; proj.s=0; proj.run=false;
     const key=k(mode==="main"?"main":"sec",cur);
@@ -362,87 +358,61 @@ function adjustProject(d){
 function openMainProject(n){mode="main";cur=n;showView('projectView');loadProj()}
 function openSecondaryProject(n){mode="secondary";cur=n;showView('projectView');loadProj()}
 
-/* КОНТЕКСТНЕ МЕНЮ ТА LONG PRESS */
+/* КОНТЕКСТНЕ МЕНЮ */
 let pressTimer, lastX, lastY;
 const menu = document.getElementById('contextMenu');
 
 function dayTouchStart(e, key, isTrash=false){
     const touch = e.touches ? e.touches[0] : e;
     lastX = touch.clientX; lastY = touch.clientY;
-    
     clearTimeout(pressTimer);
-    pressTimer = setTimeout(() => {
-        if(e.cancelable) e.preventDefault(); 
-        showContextMenu(key, isTrash);
-    }, 700);
+    pressTimer = setTimeout(() => { if(e.cancelable) e.preventDefault(); showContextMenu(key, isTrash); }, 700);
 }
 function dayTouchEnd(){ clearTimeout(pressTimer); }
 
 function showContextMenu(key, isTrash){
     const menuAction = document.getElementById('menuAction');
     menuAction.textContent = isTrash ? "Відновити" : "Редагувати";
-    menuAction.onclick = (e) => { 
-        e.stopPropagation();
-        isTrash ? restoreDay(key) : openEditDay(key); 
-        hideMenu(); 
-    };
-    
-    const menuW = 180;
-    const menuH = 50;
-    let x = lastX;
-    let y = lastY;
-    
-    if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 10;
-    if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 10;
-
-    menu.style.left = x + 'px';
-    menu.style.top = y + 'px';
+    menuAction.onclick = (e) => { e.stopPropagation(); isTrash ? restoreDay(key) : openEditDay(key); hideMenu(); };
+    menu.style.left = Math.min(window.innerWidth - 190, lastX) + 'px';
+    menu.style.top = Math.min(window.innerHeight - 60, lastY) + 'px';
     menu.classList.add('visible');
 }
-
 function hideMenu(){ menu.classList.remove('visible'); }
 
 window.oncontextmenu = function(e) {
-    if (e.target.closest('.day')) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
+    if (e.target.closest('.day')) { e.preventDefault(); e.stopPropagation(); return false; }
 };
 
 function openEditDay(key){
     editingKey=key;
-    document.getElementById('editDateLabel').textContent="Редагування: "+key.split('_')[2];
+    document.getElementById('editDateLabel').textContent="Редагування: " + key.split('_')[2];
     document.getElementById('editTimeInput').value=fmt(+localStorage[key]||0);
     showView('editView');
 }
 function closeEdit(){showView('projectView')}
 function saveEdit(){
     localStorage[editingKey]=parseFmt(document.getElementById('editTimeInput').value);
-    if(editingKey.endsWith(dayKey())){ proj.t=+localStorage[editingKey]; localStorage[`proj_${mode}_${cur}_total`]=proj.t; }
+    if(editingKey.endsWith(dayKey())){ proj.t=+localStorage[editingKey]; localStorage["proj_"+mode+"_"+cur+"_total"]=proj.t; }
     loadDays(); updateToday(); closeEdit();
 }
 
-/* КОШИК */
 function moveToTrash(){
     const trashKey = "trash_" + editingKey;
     localStorage[trashKey] = localStorage[editingKey];
     localStorage.removeItem(editingKey);
-    if(editingKey.endsWith(dayKey())){ proj.t=0; localStorage[`proj_${mode}_${cur}_total`]=0; }
+    if(editingKey.endsWith(dayKey())){ proj.t=0; localStorage["proj_"+mode+"_"+cur+"_total"]=0; }
     loadDays(); updateToday(); closeEdit();
 }
 function openTrash(){ showView('trashView'); renderTrash(); }
 function renderTrash(){
-    const list=document.getElementById("trashList"); list.innerHTML="";
-    const prefix = "trash_" + (mode==="main"?"main_":"sec_") + cur + "_";
-    Object.keys(localStorage).filter(k=>k.startsWith(prefix)).sort().reverse().forEach(key=>{
-        const d=key.split("_")[3];
-        const row=document.createElement("div"); row.className="day";
-        row.innerHTML=`<span>${d}</span><span>${fmt(+localStorage[key])}</span>`;
-        row.onmousedown=(e)=>dayTouchStart(e, key, true);
-        row.onmouseup=dayTouchEnd;
-        row.ontouchstart=(e)=>dayTouchStart(e, key, true);
-        row.ontouchend=dayTouchEnd;
+    const list=document.getElementById("trashList"); if(!list) return;
+    list.innerHTML=""; const prefix = "trash_" + (mode==="main"?"main_":"sec_") + cur + "_";
+    Object.keys(localStorage).filter(k=>k.indexOf(prefix)===0).sort().reverse().forEach(key=>{
+        const d=key.split("_")[3]; const row=document.createElement("div"); row.className="day";
+        row.innerHTML="<span>" + d + "</span><span>" + fmt(+localStorage[key]) + "</span>";
+        row.onmousedown=(e)=>dayTouchStart(e, key, true); row.onmouseup=dayTouchEnd;
+        row.ontouchstart=(e)=>dayTouchStart(e, key, true); row.ontouchend=dayTouchEnd;
         list.appendChild(row);
     });
 }
@@ -450,36 +420,32 @@ function restoreDay(trashKey){
     const originalKey = trashKey.replace("trash_", "");
     localStorage[originalKey] = localStorage[trashKey];
     localStorage.removeItem(trashKey);
-    if(originalKey.endsWith(dayKey())){ proj.t=+localStorage[originalKey]; localStorage[`proj_${mode}_${cur}_total`]=proj.t; }
+    if(originalKey.endsWith(dayKey())){ proj.t=+localStorage[originalKey]; localStorage["proj_"+mode+"_"+cur+"_total"]=proj.t; }
     renderTrash(); loadDays(); updateToday();
 }
 
-/* СПИСОК ДНІВ */
 function loadDays(){
-  const list=document.getElementById("daysList"); list.innerHTML="";
-  const prefix = (mode==="main"?"main_":"sec_") + cur + "_";
-  Object.keys(localStorage).filter(k=>k.startsWith(prefix)).sort().reverse().forEach(key=>{
-      const d=key.split("_")[2]; const D=new Date(d);
-      const row=document.createElement("div"); row.className="day";
-      row.innerHTML=`<span>${d.slice(8,10)}.${d.slice(5,7)} ${daysUA[D.getDay()]}</span><span>${fmt(+localStorage[key])}</span>`;
-      row.onmousedown=(e)=>dayTouchStart(e, key);
-      row.onmouseup=dayTouchEnd;
-      row.ontouchstart=(e)=>dayTouchStart(e, key);
-      row.ontouchend=dayTouchEnd;
+  const list=document.getElementById("daysList"); if(!list) return;
+  list.innerHTML=""; const prefix = (mode==="main"?"main_":"sec_") + cur + "_";
+  Object.keys(localStorage).filter(k=>k.indexOf(prefix)===0).sort().reverse().forEach(key=>{
+      const d=key.split("_")[2]; const D=new Date(d); const row=document.createElement("div"); row.className="day";
+      row.innerHTML="<span>" + d.slice(8,10) + "." + d.slice(5,7) + " " + daysUA[D.getDay()] + "</span><span>" + fmt(+localStorage[key]) + "</span>";
+      row.onmousedown=(e)=>dayTouchStart(e, key); row.onmouseup=dayTouchEnd;
+      row.ontouchstart=(e)=>dayTouchStart(e, key); row.ontouchend=dayTouchEnd;
       list.appendChild(row);
   });
 }
 
 /* CSV */
 function exportCSV(){
-  let c=""; Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
+  let c=""; Object.keys(localStorage).forEach(k=>c+=k + "," + localStorage[k] + "\n");
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c]));
   a.download="work-time.csv"; a.click();
 }
 function importCSV(){document.getElementById('fileInput').click()}
 document.getElementById('fileInput').onchange=e=>{
   const r=new FileReader(); r.onload=()=>{
-    r.result.split("\n").forEach(l=>{ const [k,v]=l.split(","); if(k)localStorage[k]=v; });
+    r.result.split("\n").forEach(l=>{ const p=l.split(","); if(p[0])localStorage[p[0]]=p[1]; });
     location.reload();
   }; r.readAsText(e.target.files[0]);
 };
