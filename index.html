@@ -59,6 +59,7 @@ body{
   justify-content: center;
   white-space: nowrap;
 }
+/* Стили для иконки SF Symbol */
 .btn svg {
   width: 18px;
   height: 18px;
@@ -71,6 +72,7 @@ body{
 
 .card{padding:18px}
 
+/* КОНТЕКСТНЕ МЕНЮ */
 #contextMenu {
     position: fixed;
     z-index: 2000;
@@ -99,6 +101,7 @@ body{
 }
 .menu-item:active { background: rgba(255,255,255,0.1); }
 
+/* ЕКРАНИ */
 .top{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }
 .header{ display: flex; justify-content: space-between; padding: 14px; gap: 12px; }
 .header .btn { flex: 1; }
@@ -169,9 +172,9 @@ input[type=file]{display:none}
     <input type="file" id="fileInput">
   </div>
   <div class="projects">
-    <div class="card project" onclick="openMainProject('Арні')">
-      <div class="name">Арні</div>
-      <div class="today" id="today_арні">Сьогодні 00:00:00</div>
+    <div class="card project" onclick="openMainProject('Crypto')">
+      <div class="name">Crypto</div>
+      <div class="today" id="today_crypto">Сьогодні 00:00:00</div>
     </div>
     <div class="card project" onclick="openMainProject('UAPP')">
       <div class="name">UAPP</div>
@@ -179,7 +182,7 @@ input[type=file]{display:none}
     </div>
   </div>
   <div class="assign">
-    <div class="btn disabled" id="assignArni" onclick="assignMain('Арні')">Зачислити в Арні</div>
+    <div class="btn disabled" id="assignCrypto" onclick="assignMain('Crypto')">Зачислити в Crypto</div>
     <div class="btn disabled" id="assignUapp" onclick="assignMain('UAPP')">Зачислити в UAPP</div>
   </div>
   <div class="timer-wrap">
@@ -242,6 +245,7 @@ input[type=file]{display:none}
 </div>
 
 <script>
+/* JS СТАБІЛЬНА ВЕРСІЯ */
 const daysUA=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
 const fmt=t=>{
   const s=Math.floor(Math.abs(t)/1000);
@@ -255,12 +259,6 @@ const parseFmt = s => {
 };
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
-
-/* Додаємо Crypto у вторинні проєкти при першому запуску */
-(()=>{
-  const sec = JSON.parse(localStorage.secondaryProjects||"[]");
-  if(!sec.includes("Crypto")){ sec.unshift("Crypto"); localStorage.secondaryProjects=JSON.stringify(sec); }
-})();
 
 /* ТАЙМЕРИ */
 let main={t:+localStorage.main_total||0, s:+localStorage.main_start||0, run:false};
@@ -293,13 +291,13 @@ function assignMain(p){
 }
 function updateAssign(){
   const a=main.t>0;
-  document.getElementById("assignArni").classList.toggle("disabled",!a);
+  document.getElementById("assignCrypto").classList.toggle("disabled",!a);
   document.getElementById("assignUapp").classList.toggle("disabled",!a);
 }
 function updateToday(){
-  [["Арні","арні"],["UAPP","uapp"]].forEach(([p,id])=>{
-    const el=document.getElementById("today_"+id);
-    if(el) el.textContent="Сьогодні "+fmt(+localStorage[k("main",p)]||0);
+  ["Crypto","UAPP"].forEach(p=>{
+    const el=document.getElementById("today_"+p.toLowerCase());
+    if(el)el.textContent="Сьогодні "+fmt(+localStorage[k("main",p)]||0);
   });
 }
 tickMain(); updateToday();
@@ -313,7 +311,7 @@ function goHome(){showView('home')}
 function openSecondary(){renderSecondary(); showView('projectsView')}
 function backFromProject(){mode==="secondary"?openSecondary():goHome()}
 
-/* ВТОРИННІ ПРОЄКТИ */
+/* ПРОЄКТИ */
 const getSec=()=>JSON.parse(localStorage.secondaryProjects||"[]");
 const saveSec=l=>localStorage.secondaryProjects=JSON.stringify(l);
 function renderSecondary(){
@@ -371,6 +369,7 @@ const menu = document.getElementById('contextMenu');
 function dayTouchStart(e, key, isTrash=false){
     const touch = e.touches ? e.touches[0] : e;
     lastX = touch.clientX; lastY = touch.clientY;
+    
     clearTimeout(pressTimer);
     pressTimer = setTimeout(() => {
         if(e.cancelable) e.preventDefault(); 
@@ -387,10 +386,15 @@ function showContextMenu(key, isTrash){
         isTrash ? restoreDay(key) : openEditDay(key); 
         hideMenu(); 
     };
-    const menuW = 180, menuH = 50;
-    let x = lastX, y = lastY;
+    
+    const menuW = 180;
+    const menuH = 50;
+    let x = lastX;
+    let y = lastY;
+    
     if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 10;
     if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 10;
+
     menu.style.left = x + 'px';
     menu.style.top = y + 'px';
     menu.classList.add('visible');
