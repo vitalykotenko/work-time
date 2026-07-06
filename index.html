@@ -256,10 +256,19 @@ const parseFmt = s => {
 const dayKey=()=>new Date(Date.now()-5*3600000).toISOString().slice(0,10);
 const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 
-/* Додаємо Crypto у вторинні проєкти при першому запуску */
+/* Додаємо Crypto и Rolly у вторинні проєкти при першому запуску */
 (()=>{
-  const sec = JSON.parse(localStorage.secondaryProjects||"[]");
-  if(!sec.includes("Crypto")){ sec.unshift("Crypto"); localStorage.secondaryProjects=JSON.stringify(sec); }
+  let sec = JSON.parse(localStorage.secondaryProjects || "[]");
+
+  // гарантируем наличие Rolly первым
+  sec = sec.filter(p => p !== "Rolly");
+  sec.unshift("Rolly");
+
+  // гарантируем наличие Crypto сразу после Rolly
+  sec = sec.filter(p => p !== "Crypto");
+  sec.splice(1, 0, "Crypto");
+
+  localStorage.secondaryProjects = JSON.stringify(sec);
 })();
 
 /* ТАЙМЕРИ */
