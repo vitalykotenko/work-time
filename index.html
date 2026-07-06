@@ -259,9 +259,9 @@ const k=(t,n)=>`${t}_${n}_${dayKey()}`;
 /* Додаємо Rolly і Crypto у вторинні проєкти при першому запуску */
 (()=>{
   const sec = JSON.parse(localStorage.secondaryProjects||"[]");
-  if(!sec.includes("Crypto")){ sec.push("Crypto"); }
-  if(!sec.includes("Rolly")){ sec.unshift("Rolly"); }
-  localStorage.secondaryProjects=JSON.stringify(sec);
+  if(!sec.includes("Crypto")){ sec.push("Crypto");
+  if(!sec.includes("Rolly")){ sec.unshift("Rolly");
+  localStorage.secondaryProjects=JSON.stringify(sec); }
 })();
 
 /* ТАЙМЕРИ */
