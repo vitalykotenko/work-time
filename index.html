@@ -495,22 +495,40 @@ function loadDays(){
 
 /* CSV */
 function exportCSV(){
-  let c=""; Object.keys(localStorage).forEach(k=>c+=`${k},${localStorage[k]}\n`);
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([c]));
-  a.download="work-time.csv"; a.click();
+  let c="";
+  Object.keys(localStorage).forEach(k=>{
+    c += encodeURIComponent(k) + "," + encodeURIComponent(localStorage[k]) + "\n";
+  });
+
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([c],{type:"text/csv"}));
+  a.download="work-time.csv";
+  a.click();
 }
-function importCSV(){document.getElementById('fileInput').click()}
+
+function importCSV(){
+  document.getElementById('fileInput').click();
+}
+
 document.getElementById('fileInput').onchange=e=>{
-  const r=new FileReader(); r.onload=()=>{
-    r.result.split("\n").forEach(l=>{ const [k,v]=l.split(","); if(k)localStorage[k]=v; });
-    localStorage.main_start = 0;
-Object.keys(localStorage).forEach(k=>{
-  if(k.endsWith("_start")){
-    localStorage[k] = 0;
-  }
-});
+  const r=new FileReader();
+  r.onload=()=>{
+    r.result.split("\n").forEach(l=>{
+      if(!l.trim()) return;
+
+      const comma=l.indexOf(",");
+      if(comma===-1) return;
+
+      const k=decodeURIComponent(l.slice(0,comma));
+      const v=decodeURIComponent(l.slice(comma+1));
+
+      if(k) localStorage[k]=v;
+    });
+
     location.reload();
-  }; r.readAsText(e.target.files[0]);
+  };
+
+  r.readAsText(e.target.files[0]);
 };
 </script>
 </body>
