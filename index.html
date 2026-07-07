@@ -190,6 +190,7 @@ input[type=file]{display:none}
     <div class="adjust" onclick="adjustMain(-60000)">-1</div>
     <div class="adjust" onclick="adjustMain(60000)">+1</div>
     <div class="adjust" onclick="adjustMain(600000)">+10</div>
+    <div class="adjust" onclick="resetMain()">0</div>
   </div>
   <div class="bottom"><div class="btn" onclick="openSecondary()">Проєкти</div></div>
 </div>
@@ -215,6 +216,7 @@ input[type=file]{display:none}
     <div class="adjust" onclick="adjustProject(-60000)">-1</div>
     <div class="adjust" onclick="adjustProject(60000)">+1</div>
     <div class="adjust" onclick="adjustProject(600000)">+10</div>
+    <div class="adjust" onclick="resetProject()">0</div>
   </div>
   <div class="days" id="daysList"></div>
 </div>
@@ -293,6 +295,14 @@ mainTimer.onclick=()=>{
   }
 };
 function adjustMain(d){ main.t=Math.max(0,main.t+d); localStorage.main_total=main.t; }
+function resetMain(){
+    main={t:0,s:0,run:false};
+    localStorage.main_start=0;
+    localStorage.main_total=0;
+    mainTimer.classList.remove("active");
+    updateAssign();
+    tickMain();
+}
 function assignMain(p){
   if(!main.t)return;
   const key=k("main",p);
@@ -369,6 +379,14 @@ function adjustProject(d){
   const key=k(mode==="main"?"main":"sec",cur);
   localStorage[key]=(+(localStorage[key]||0))+d;
   proj.t=Math.max(0,proj.t+d); loadDays(); updateToday();
+}
+function resetProject(){
+  const base=`proj_${mode}_${cur}`;
+  proj={run:false,t:0,s:0};
+  localStorage[base+"_start"]=0;
+  localStorage[base+"_total"]=0;
+  projectTimer.classList.remove("active");
+  tickProj();
 }
 function openMainProject(n){mode="main";cur=n;showView('projectView');loadProj()}
 function openSecondaryProject(n){mode="secondary";cur=n;showView('projectView');loadProj()}
